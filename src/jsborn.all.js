@@ -956,3 +956,632 @@
 	if(!window._j) { window._j = JSB };
 
 })(window);
+
+(function(window) {
+
+	JSB.extendCore("JSB.core.model", JSB.cls("jsborn/cores/model", {
+
+		initialize: function() {
+
+			var me = this;
+
+		},
+
+		getObjKey: function(obj, str_key, index) {
+
+			var dd = this;
+
+			var _ary_key = str_key.split('.');
+
+			var _return = false;
+
+			if (!index) {
+				index = 0;
+			}
+
+			jQuery.each(obj, function(key, val) {
+
+				if (key == _ary_key[index]) {
+
+					if (index < _ary_key.length - 1) {
+
+						if (typeof obj[key] === 'object') {
+							_return = dd.getObjKey(obj[key], str_key, index + 1);
+						} else {
+							_return = obj[key];
+						}
+
+					} else {
+						_return = obj[key];
+					}
+
+				}
+
+			});
+
+			return _return;
+
+		},
+
+		getObjtDiff: function(obj_org, obj_mod, str_type) {
+
+			var dd = this;
+
+			dd._ary_diff_check = new Array();
+
+			var _obj_data = dd._check_obj_diff(obj_org, obj_mod);
+
+			if (_obj_data[str_type]) {
+				return _obj_data[str_type];
+			}
+
+			return _obj_data;
+
+		},
+
+		_check_obj_diff: function(obj_org, obj_mod) {
+
+			var dd = this;
+
+			if (typeof obj_org === 'undefined') {
+				obj_org = {};
+			}
+
+			if (typeof obj_mod === 'undefined') {
+				obj_mod = {};
+			}
+
+			var _obj_del = {};
+			var _obj_mod = {};
+			var _obj_add = {};
+
+
+			jQuery.each(obj_mod, function(key, val) {
+
+				var obj_val = obj_org[key];
+				if (typeof obj_val === 'undefined') {
+					_obj_add[key] = val;
+				} else if (typeof obj_val != typeof val) {
+					_obj_mod[key] = val;
+				} else if (obj_val !== val) {
+					if (typeof val === 'object') {
+						if (jQuery.inArray(dd._ary_diff_check, val) >= 0) {
+							return false;
+						}
+						ret = dd._check_obj_diff(obj_val, val);
+						if (!jQuery.isEmptyObject(ret.modify)) {
+							_obj_mod[key] = jQuery.extend(true, {}, ret.modify);
+						}
+						if (!jQuery.isEmptyObject(ret.add)) {
+							_obj_add[key] = jQuery.extend(true, {}, ret.add);
+						}
+						if (!jQuery.isEmptyObject(ret.del)) {
+							_obj_del[key] = jQuery.extend(true, {}, ret.del);
+						}
+						dd._ary_diff_check.push(val);
+					} else {
+						_obj_mod[key] = val;
+					}
+				}
+			});
+
+			jQuery.each(obj_org, function(key, obj_org) {
+				if (typeof obj_mod[key] === 'undefined') {
+					_obj_del[key] = true;
+				}
+			});
+
+			return {
+				modify: _obj_mod,
+				add: _obj_add,
+				del: _obj_del
+			};
+
+		}
+
+	}));
+
+})(window);
+
+(function(window) {
+
+	JSB.extendCore("JSB.core.channel", JSB.cls("jsborn/cores/channel", {
+
+		addChannel: function(str_room) {
+
+			var dd = this;
+
+			if (dd.getChannel(str_room)) {
+				return false;
+			}
+
+			dd._obj_channel[str_room] = {
+				member: []
+			};
+
+			return true;
+
+		},
+
+		delChannel: function(str_room) {
+
+			var dd = this;
+
+			if (!dd.getChannel(str_room)) {
+				return false;
+			}
+
+			delete dd._obj_channel[str_room];
+
+			return true;
+
+		},
+
+		join: function(str_room, ns_scope, func_cb) {
+
+			var dd = this;
+
+			dd.addChannel(str_room);
+
+			var _obj_room = dd.getChannel(str_room);
+
+			_obj_room["member"].push(ns_scope);
+
+			jQuery(this)[JSB.event.on](str_room, {
+				scope: ns_scope
+			}, function(e) {
+				func_cb.apply(ns_scope, arguments);
+			});
+
+			return true;
+
+		},
+
+		getChannel: function(str_room) {
+
+			var dd = this;
+
+			return dd._obj_channel[str_room];
+
+		},
+
+		getChannelData: function() {
+
+			var dd = this;
+
+			return dd._obj_channel;
+
+		},
+
+		send: function(str_room) {
+
+			var dd = this;
+
+			var _obj_room = dd.getChannel(str_room);
+
+			if (!_obj_room) {
+				return false;
+			}
+
+			var _ary_member = _obj_room["member"];
+
+			var _ary_send = [];
+
+			for (var i = 1; i < arguments.length; i++) {
+
+				_ary_send.push(arguments[i]);
+
+			};
+
+			jQuery(this).triggerHandler(str_room, _ary_send);
+
+			return true;
+
+		},
+
+		leave: function(str_room, ns_scope) {
+
+			var _obj_jq_data = jQuery._data(this, "events");
+
+			if (!_obj_jq_data[str_room]) {
+				return false;
+			}
+
+			for (var i = 0; i < _obj_jq_data[str_room].length; i++) {
+				if (_obj_jq_data[str_room][i]["data"]["scope"] == ns_scope) {
+					_obj_jq_data[str_room].splice(i, 1);
+					return true;
+				}
+			};
+
+			return false;
+
+		},
+
+		initialize: function() {
+
+			var dd = this;
+
+			dd._obj_channel = {};
+
+			JSB.addEventListener('destroy', function(e, obj) {
+
+				for (x in dd._obj_channel) {
+					dd.leave(x, obj);
+				}
+
+			})
+
+		}
+
+	}));
+
+})(window);
+
+(function(window) {
+
+	JSB.extendPlugin("model", JSB.cls("jsborn/plugins/model", {
+
+		imports: ["jsborn/cores/model"],
+
+		initialize: function(parent) {
+
+			var me = this;
+
+			me.PLUG_MODEL = {
+				model: []
+			}
+
+			me.parent = parent ? parent : me;
+
+			me.parent.addEventListener('destroy', function() {
+
+				for (var i = 0; i < me.PLUG_MODEL.model.length; i++) {
+
+					var _ns = me.PLUG_MODEL.model[i];
+
+					_ns.destroy();
+
+				};
+
+			});
+
+		},
+
+		getModelData: function(str_key) {
+
+			var me = this;
+
+			return me.PLUG_MODEL.model;
+
+		},
+
+		getModel: function(str_key) {
+
+			var me = this;
+
+			for (var i = 0; i < me.PLUG_MODEL.model.length; i++) {
+
+				var _ns_model_node = me.PLUG_MODEL.model[i];
+
+				if (_ns_model_node.getOption().key == str_key) {
+					return _ns_model_node;
+				}
+
+			};
+
+			return false;
+
+		},
+
+		setModel: function(str_key, obj_data) {
+
+			var me = this;
+
+			var _obj_model = me.getModel(str_key);
+
+			if (!_obj_model) {
+				return false;
+			}
+
+			return _obj_model.change(obj_data);
+
+		},
+
+		addModel: function(str_key, obj_data) {
+
+			var me = this;
+
+			var _ns_model_node = JSB.create("jsborn/plugin/model/node", {
+				key: str_key,
+				data: jQuery.extend(true, {}, obj_data)
+			});
+
+			me.PLUG_MODEL.model.push(_ns_model_node);
+
+			return _ns_model_node;
+
+		},
+
+		delModel: function(str_key) {
+
+			var me = this;
+
+			for (var i = 0; i < me.PLUG_MODEL.model.length; i++) {
+
+				var _ns_model_node = me.PLUG_MODEL.model[i];
+
+				if (_ns_model_node.getOption().key == str_key) {
+
+					me.PLUG_MODEL.model.splice(i, 1);
+
+					return _ns_model_node;
+				}
+
+			};
+
+			return false;
+
+		}
+
+	}));
+
+	JSB.cls("jsborn/plugin/model/node", {
+
+		getData: function() {
+
+			var me = this;
+
+			return jQuery.extend(true, {}, me._obj_data.data);
+
+		},
+
+		setData: function(obj_data) {
+
+			var me = this;
+
+			me._obj_data.data = obj_data;
+
+			return jQuery.extend(true, {}, me._obj_data.data);
+
+		},
+
+		setOption: function(obj_data) {
+
+			var me = this;
+
+			me._obj_data = obj_data;
+
+			return me._obj_data;
+
+		},
+
+		getOption: function() {
+
+			var me = this;
+
+			return me._obj_data;
+
+		},
+
+		change: function(obj_data) {
+
+			var me = this;
+
+			var _obj_diff = JSB.core.model.getObjtDiff(me.getData(), obj_data, "all");
+
+			if (!jQuery.isEmptyObject(_obj_diff.add)) {
+				me.dispatchEvent("model-add", _obj_diff.add);
+			}
+
+			if (!jQuery.isEmptyObject(_obj_diff.del)) {
+				me.dispatchEvent("model-del", _obj_diff.del);
+			}
+
+			if (!jQuery.isEmptyObject(_obj_diff.modify)) {
+				me.dispatchEvent("model-modify", _obj_diff.modify);
+			}
+
+			return me.setData(obj_data);
+
+		},
+
+		initialize: function(options) {
+
+			var me = this;
+
+			me.setOption(options);
+
+		}
+
+	});
+
+})(window);
+
+(function(window) {
+
+	JSB.extendPlugin("dom", JSB.cls("jsborn/plugins/dom", {
+
+		extend: "jsborn/plugins/model",
+
+		initialize: function(parent) {
+
+			var me = this;
+
+			me.SUPER(me);
+
+			me.PLUG_DOM = {
+				str_root: 'body',
+				tag: ["INPUT", "SELECT"],
+				nodes: []
+			};
+
+			me.parent = parent ? parent : me;
+
+			me.parent.addEventListener('destroy', function() {
+
+				for (var i = 0; i < me.PLUG_DOM.nodes.length; i++) {
+
+					var _ns = me.PLUG_DOM.nodes[i];
+
+					_ns.destroy();
+
+				};
+
+			});
+
+		},
+
+		registerData: function() {
+
+			var me = this;
+
+			var _str_filter = '';
+
+			this.select().find("[jsb-data]").filter(function() {
+
+				return !$(this).parentsUntil(me.select(), "[jsb-cls]").length;
+
+			}).each(function(i, k) {
+
+				var _el = jQuery(this);
+
+				var _str_cls = _el.attr("jsb-data");
+
+				var _str_d_e = _el.attr("jsb-data-event");
+
+				var _ary_event = _str_d_e ? _str_d_e.split(',') : [];
+
+				var _ary_key = _str_cls.split(':');
+
+				var _str_key = _ary_key[0];
+
+				var _str_name = _ary_key[1];
+
+				var _str_ctrl;
+
+				var _obj_ctrl = me.PLUG_DOM;
+
+				if (_ary_event.length <= 0) {
+					_ary_event.push("modify");
+				}
+
+				if (jQuery.inArray(_el[0].tagName, _obj_ctrl.tag) == -1) {
+					_str_ctrl = "html";
+				} else {
+					_str_ctrl = "val";
+				}
+
+				for (var i = 0; i < _ary_event.length; i++) {
+
+					if (!me.getModel(_str_key)) {
+						continue;
+					}
+
+					me.getModel(_str_key).addEventListener("model-" + _ary_event[i], function(e, scope, obj) {
+
+						var _misc_val = JSB.core.model.getObjKey(obj, _str_name);
+
+						if (_misc_val !== false) {
+
+							_el[_str_ctrl](_misc_val);
+
+						}
+
+					});
+
+				};
+
+			});
+
+		},
+
+		registerClass: function() {
+
+			var me = this;
+
+			this.select().find("[jsb-cls]").filter(function() {
+
+				return !$(this).parentsUntil(me.select(), "[jsb-cls]").length;
+
+			}).each(function(i, k) {
+
+				var _str_cls = jQuery(this).attr("jsb-cls");
+
+				var _ns_class = JSB.create(_str_cls);
+
+				me.PLUG_DOM.nodes.push(_ns_class);
+
+				jQuery(me).triggerHandler('cls.controller-create', [_ns_class, k]);
+
+			});
+
+		},
+
+		registerEvent: function(func) {
+
+			var me = this;
+
+			this.select().find("[jsb-event]").filter(function() {
+
+				return !$(this).parentsUntil(me.select(), "[jsb-cls]").length;
+
+			}).each(function(i, k) {
+
+				var _ary_key = jQuery(this).attr("jsb-event").split(':');
+
+				var _str_event = _ary_key[0];
+
+				var _str_cb = _ary_key[1];
+
+				var _func_cb = me.parent[_str_cb];
+
+				jQuery(this)[JSB.event.off](_str_event)[JSB.event.on](_str_event, {
+					scope: me.parent
+				}, function(e) {
+
+					if (jQuery.isFunction(_func_cb)) {
+						_func_cb.apply(this, arguments);
+					} else {
+						console.log("DOM IS NOT DEFINE EVENT CallBack", i);
+					}
+
+				})
+
+			});
+
+		},
+
+		select: function(target) {
+
+			var _str_root = this.PLUG_DOM.str_root;
+
+			if (target) {
+				return jQuery(_str_root).find(target);
+			}
+
+			if (!_str_root) {
+				_str_root = 'body';
+			}
+
+			return jQuery(_str_root);
+
+		},
+
+		setRoot: function(str_root) {
+
+			this.PLUG_DOM.str_root = str_root;
+
+			return this.PLUG_DOM.str_root;
+
+		},
+
+		getRoot: function() {
+
+			return this.PLUG_DOM.str_root;
+
+		}
+
+	}));
+
+})(window);
