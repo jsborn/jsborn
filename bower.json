@@ -1,0 +1,32 @@
+{
+	"name": "jsborn",
+	"description": "A jQuery best plugin to modular JavaScript and auto load depend file.",
+	"version": "0.5.2",
+	"main": [
+		"dist/css/bootstrapValidator.css",
+		"dist/js/bootstrapValidator.js"
+	],
+	"license": "MIT",
+	"keywords": [
+		"oop",
+		"modular",
+		"object-oriented",
+		"class",
+		"require",
+		"depend",
+		"jsborn"
+	],
+	"authors": [{
+		"name": "tureki",
+		"email": "tureki11@gmail.com",
+		" homepage": "https://twitter.com/tureki"
+	}],
+	"homepage": "https://github.com/tureki/jsborn",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/tureki/jsborn.git"
+	},
+	"dependencies": {
+		"jquery": ">= 1.5.0"
+	}
+}
