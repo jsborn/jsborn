@@ -5,6 +5,11 @@ node_js:
   - "0.10"
   - "0.11"
 
+branches:
+    only:
+        - master
+        - developer
+        
 before_script:
   - bower install
   - npm install -g grunt-cli
