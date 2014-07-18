@@ -245,16 +245,12 @@ module.exports = function(grunt) {
 
 	grunt.registerTask('default', 'build');
 	// grunt.registerTask('build',   ['copy', 'jshint', 'uglify']);
-	// grunt.registerTask('build',   ['copy', 'uglify','qunit','blanket_qunit']);
 	grunt.registerTask('build',   ['copy', 'uglify','mustache_render','qunit','coveralls']);
-	// grunt.registerTask('build',   ['copy', 'uglify','htmlbuild']);
-	grunt.loadNpmTasks('grunt-mustache-render');
-	grunt.loadNpmTasks('grunt-qunit-istanbul');
-	// grunt.loadNpmTasks('grunt-html-build');
-	// grunt.loadNpmTasks('grunt-contrib-qunit');
-	grunt.loadNpmTasks('grunt-coveralls');
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-watch');
+	grunt.loadNpmTasks('grunt-coveralls');
+	grunt.loadNpmTasks('grunt-mustache-render');
+	grunt.loadNpmTasks('grunt-qunit-istanbul');
 };
