@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>QUnit Test</title>
+	<link rel="stylesheet" href="../../vendor/qunit/qunit/qunit.css"></head>
+<body>
+	<div id="qunit"></div>
+	<div id="qunit-fixture"></div>
+	<script src="../../vendor/qunit/qunit/qunit.js"></script>
+	<script src="../../vendor/{{file}}"></script>
+	<script src="../../src/jsborn.js"></script>
+	<script type="text/javascript">
+		JSB.setConfig({
+			imports:{
+				path:'../'
+			}
+		})
+	</script>
+	<script src="../qunit/tpl.js"></script>
+</body>
+</html>
