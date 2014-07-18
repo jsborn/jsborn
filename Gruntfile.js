@@ -205,8 +205,8 @@ module.exports = function(grunt) {
 						'<%= dirs.src %>/**.js'
 					],
 					instrumentedFiles: 'temp/',
-					htmlReport: 'report/coverage',
-					coberturaReport: 'report/',
+					htmlReport: 'build/report/coverage',
+					lcovReport: "build/report/lcov",
 					linesThresholdPct: 95,
 					functionsThresholdPct: 95,
 					branchesThresholdPct: 90,
@@ -220,6 +220,15 @@ module.exports = function(grunt) {
 				'<%= dirs.test %>/jquery.1.7/**.html',
 				'<%= dirs.test %>/jquery.1.6/**.html'
 			]
+		},
+
+		coveralls: {
+			options: {
+				force: true
+			},
+			main_target: {
+				src: "build/report/lcov/lcov.info"
+			}
 		},
 
 		watch: {
@@ -237,12 +246,13 @@ module.exports = function(grunt) {
 	grunt.registerTask('default', 'build');
 	// grunt.registerTask('build',   ['copy', 'jshint', 'uglify']);
 	// grunt.registerTask('build',   ['copy', 'uglify','qunit','blanket_qunit']);
-	grunt.registerTask('build',   ['copy', 'uglify','mustache_render','qunit']);
+	grunt.registerTask('build',   ['copy', 'uglify','mustache_render','qunit','coveralls']);
 	// grunt.registerTask('build',   ['copy', 'uglify','htmlbuild']);
 	grunt.loadNpmTasks('grunt-mustache-render');
 	grunt.loadNpmTasks('grunt-qunit-istanbul');
 	// grunt.loadNpmTasks('grunt-html-build');
 	// grunt.loadNpmTasks('grunt-contrib-qunit');
+	grunt.loadNpmTasks('grunt-coveralls');
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-uglify');

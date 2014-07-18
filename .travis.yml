@@ -12,8 +12,9 @@ branches:
         - developer
         
 before_script:
-  - bower install
+  - npm install -g bower
   - npm install -g grunt-cli
+  - bower install
   - npm install
 
 script:

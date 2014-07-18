@@ -216,7 +216,6 @@ pip-log.txt
 
 
 node_modules
-report
 vendor
 tests/jquery/*.html
 tests/jquery.1.9/*.html

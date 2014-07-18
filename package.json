@@ -33,6 +33,7 @@
     "grunt-contrib-jshint": "latest",
     "grunt-contrib-uglify": "latest",
     "grunt-contrib-watch": "latest",
+    "grunt-coveralls": "^0.3.0",
     "grunt-mustache-render": "^1.5.0",
     "grunt-qunit-istanbul": "^0.4.5"
   }
