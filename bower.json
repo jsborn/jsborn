@@ -1,0 +1,37 @@
+{
+	"name": "jsborn",
+	"description": "The best jQuery plugin to modular JavaScript and depend file.",
+	"version": "0.5.3",
+	"main": [
+		"./dist/js/jsborn.js"
+	],
+	"license": "Apache-2.0",
+	"keywords": [
+		"oop",
+		"modular",
+		"object-oriented",
+		"class",
+		"require",
+		"depend",
+		"jsborn"
+	],
+	"authors": [{
+		"name": "tureki",
+		"email": "tureki11@gmail.com",
+		"homepage": "https://twitter.com/tureki"
+	}],
+	"homepage": "http://jsborn.org",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/tureki/jsborn.git"
+	},
+	"dependencies": {
+		"jquery": ">= 2.0.0",
+		"jquery.1.5": "http://code.jquery.com/jquery-1.5.min.js",
+		"jquery.1.6": "http://code.jquery.com/jquery-1.6.min.js",
+		"jquery.1.7": "http://code.jquery.com/jquery-1.7.min.js",
+		"jquery.1.8": "http://code.jquery.com/jquery-1.8.0.min.js",
+		"jquery.1.9": "http://code.jquery.com/jquery-1.9.0.min.js",
+		"qunit": ">= 1.14.0"
+	}
+}

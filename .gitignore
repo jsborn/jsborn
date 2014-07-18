@@ -213,3 +213,13 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+
+node_modules
+report
+vendor
+tests/jquery/*.html
+tests/jquery.1.9/*.html
+tests/jquery.1.8/*.html
+tests/jquery.1.7/*.html
+tests/jquery.1.6/*.html

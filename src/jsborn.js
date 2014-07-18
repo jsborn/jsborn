@@ -26,7 +26,7 @@
 
 	var JSB = {
 
-		version: '0.5.2a',
+		version: '0.5.3',
 
 		status: 'ready',
 
@@ -39,11 +39,12 @@
 			cores: {},
 			clss: {},
 			plugins: {},
-			imports: {}
+			imports: {},
+			loads:[]
 		},
 
 		config: {
-			console: true,
+			console: false,
 			imports: {
 				cache: false,
 				path: '',
@@ -75,34 +76,52 @@
 		 * @param  {Function} cb   call back function
 		 * @return {boolean}
 		 */
-		classReady:function(str_name,func_cb){
+		classReady:function(str_name,func_cb,func_err){
 
-			var _obj_status = _j._get_cls(str_name)["status"];
+			var _obj_status = false;
 
 			var _bol_check = true;
 
-			if(!_obj_status){
-				_j.echo("info","class not find:"+str_name);
-				return false;
-			}
+			var _obj_cls =  _j._get_cls(str_name);
 
-			if(_obj_status.extend!==true)
-			{
-				_bol_check = false;
-			}
+			if(_obj_cls){
 
-			if(_obj_status.plugins!==true)
-			{
-				_bol_check = false;
-			}
+				_obj_status  =  _obj_cls["status"];
 
-			if(_obj_status.css!==true)
-			{
-				_bol_check = false;
-			}
+				if(_obj_status.extend!==true)
+				{
+					_bol_check = false;
+				}
 
-			if(_obj_status.imports!==true)
-			{
+				if(_obj_status.plugins!==true)
+				{
+					_bol_check = false;
+				}
+
+				if(_obj_status.css!==true)
+				{
+					_bol_check = false;
+				}
+
+				if(_obj_status.tpl!==true)
+				{
+					_bol_check = false;
+				}
+
+				if(_obj_status.imports!==true)
+				{
+					_bol_check = false;
+				}
+				// console.log("_obj_cls.fileRequire",_obj_cls.fileRequire);
+				if(_obj_cls.fileRequire<=0&&_bol_check==false)
+				{
+					if(func_err){
+						func_err.call();
+						return false;
+					}	
+				}
+
+			}else{
 				_bol_check = false;
 			}
 
@@ -110,12 +129,157 @@
 				if(_bol_check){
 					func_cb.call();
 				}else{
-					_j.ready(func_cb,str_name);	
+					_j.ready(func_cb,func_err,str_name);	
 				}
 				return true;
 			}
 
 			return _bol_check;
+
+		},
+
+		cls:function(str_name, obj_cls) {
+
+			if (_j._get_cls(str_name)) {
+
+				_j.echo("warn", "JSB_ERROR_CLASS_DEFINE", "CLASS:'" + str_name + "' define again");
+
+				return false;
+
+			}
+
+			JSB.status = "progress";
+
+			var _jsb_cls = function(misc_opt) {
+
+				obj_cls.plugins = obj_cls.plugins ? obj_cls.plugins : [];
+
+				this.className = str_name;
+
+				this.__plugins = _q.extend([],this.plugins,obj_cls.plugins);
+
+				this.__extend = [];
+
+				this.__count = 0;
+
+				this.__destroy = false;
+				//class extend super
+				this._extend(this);
+
+				this._plugin();
+
+				this.initialize(misc_opt);
+
+				this.SUPER();
+
+				delete this.__count;
+
+				return true;
+
+			};
+
+			_j.data.clss[str_name] = {
+				cls: _jsb_cls,
+				config: {
+					name: str_name,
+					single: obj_cls.single ? true : false,
+					abstr: obj_cls.abstr ? true : false
+				},
+				ready:false,
+				fileRequire:0,
+				fileLoad:0,
+				extend:obj_cls.extend?obj_cls.extend:false,
+				plugins:obj_cls.plugins?obj_cls.plugins.slice():[],
+				status:{
+					extend:obj_cls.extend?[obj_cls.extend]:true,
+					plugins:obj_cls.plugins?obj_cls.plugins.slice():true,
+					css:obj_cls.css?obj_cls.css.slice():true,
+					tpl:obj_cls.tpl?obj_cls.tpl.slice():true,
+					imports:obj_cls.imports?obj_cls.imports.slice():true
+				}
+			};
+			//開始計算要預期要載入的檔案
+			_j._file_require_count(str_name);
+			//繼承JSB預設的Class 和 Class 的 PROTOTYPE
+			_q.extend(_jsb_cls.prototype, _j.cls.prototype, obj_cls);
+			//如果是被async載入，則檢查是否已經準備完畢
+			if(JSB.getImportData()[str_name])
+			{
+				_j._check_cls_status(str_name);
+			}
+			// console.log("qunit/tests/Parent",str_name,JSB.getImportData()["qunit/tests/Parent"]);
+
+			if (obj_cls.imports) {
+
+				for (var i = 0; i < obj_cls.imports.length; i++) {
+
+					_j._parser_imports(str_name,obj_cls.imports[i]);
+
+				};
+
+			}
+
+			if (obj_cls.extend) {
+
+				if(!_j._check_cls_infite("extend",obj_cls.extend,str_name)){
+
+					_j.echo("error",str_name, "Extend: infinite loop.");
+
+					_j._set_cls_status(str_name,'fail', obj_cls.extend);
+
+				}else{
+					_j._parser_extend(_jsb_cls,obj_cls,str_name,obj_cls.extend);	
+				}
+
+			}
+
+			if (obj_cls.plugins) {
+
+				for (var i = 0; i < obj_cls.plugins.length; i++) {
+					
+					var _plug = obj_cls.plugins[i];
+
+					if(!_j._check_cls_infite("plugins",_plug,str_name)){
+
+						_j.echo("error",str_name, "PLUGIN: infinite loop.");
+
+						_j._set_cls_status(str_name,'fail', _plug);
+						
+					}else{
+						_j._parser_plugin(str_name,_plug);
+					}
+
+				};
+
+			}
+
+			if (obj_cls.tpl) {
+
+				for (var i = 0; i < obj_cls.tpl.length; i++) {
+
+					_j._parser_tpl(str_name,obj_cls.tpl[i]);
+
+				};
+
+			}
+
+			if (obj_cls.css) {
+
+				for (var i = 0; i < obj_cls.css.length; i++) {
+
+					_j._parser_css(str_name,obj_cls.css[i]);
+
+				};
+
+			}
+
+			setTimeout(function() {
+
+				_j._check_cls_status(str_name);
+
+			}, 1);
+			
+			return _j.data.clss[str_name];
 
 		},
 
@@ -125,18 +289,18 @@
 
 			var _ns_cls = me._get_cls(str_name);
 
-			if(!_j.classReady(str_name)){
-				me.echo("error", "CLASS:NOT READY", str_name);
+			if(!_ns_cls){
+				me.echo("error", "JSB_ERROR_CREATE", "CLASS:"+str_name+" NOT FIND");
 				return false;
 			}
 
-			if (!_ns_cls) {
-				me.echo("error", "CLASS:NOT FIND", str_name);
+			if(!_j.classReady(str_name)){
+				me.echo("error", "JSB_ERROR_CREATE", "CLASS:"+str_name+" NOT READY");
 				return false;
 			}
 
 			if (_ns_cls.config.abstr) {
-				me.echo("error", "CLASS:ABSTR", str_name);
+				me.echo("error", "JSB_ERROR_CREATE", "CLASS:"+str_name+" ABSTR");
 				return false;
 			}
 
@@ -145,7 +309,7 @@
 			}
 
 			if (_ns_cls.config.single && _ns_cls.config.nodes.length > 0) {
-				me.echo("error", "CLASS:SINGLE", str_name);
+				me.echo("error", "JSB_ERROR_CREATE", "CLASS:"+str_name+" SINGLE");
 				return false;
 			}
 
@@ -164,25 +328,34 @@
 
 		dispatchEvent: function(str_event, misc_data) {
 
-			_q(_j).triggerHandler('jsb.' + str_event, [this, misc_data]);
+			_q(_j).triggerHandler('jsb.' + str_event, [misc_data]);
 
 		},
 
-		echo: function(str_type) {
+		echo: function(type,message,detail) {
 
-			if (console && _j.config.console) {
+			// if(_j.config.debug){
 
-				if (console[str_type]) {
+				// throw new Object({type:type,message:message,detail:detail});
 
-					console[str_type](arguments);
 
-				} else {
+			// }
+			
+			_j.dispatchEvent("log",{type:type,message:message,detail:detail});
 
-					_j.echo("log", "console no " + str_type + " method.");
+			// if (console && _j.config.console) {
 
-				}
+			// 	if (console[type]) {
 
-			}
+			// 		console[type](arguments);
+
+			// 	} else {
+
+			// 		_j.echo("log", "console no " + type + " method.");
+
+			// 	}
+
+			// }
 
 		},
 
@@ -192,11 +365,11 @@
 
 			var _str_name = cls.config.name;
 
-			if (_j._get_core(_str_name)) {
+			if (_j._get_core(str_ns)) {
 
-				_j.echo("log", "Core: " + _str_name + " already register.");
+				_j.echo("log", "JSB_ERROR_EXTEND_CORE", "Core: " + str_ns + " already register.");
 
-				return _j._get_core(_str_name);
+				return false;
 
 			}
 
@@ -221,7 +394,7 @@
 
 					obj[_ary_ns[i]] = _j.create(_str_name,{},false);
 
-					_j.data.cores[_str_name] = obj[_ary_ns[i]];
+					_j.data.cores[str_ns] = obj[_ary_ns[i]];
 
 					return obj[_ary_ns[i]];
 
@@ -233,13 +406,24 @@
 
 		extendPlugin: function(str_ns, cls) {
 
+			var me = this;
+
 			var _str_name = cls.config.name;
 
-			var me = this;
-			//check plugin
+			var _obj_plug = me.data.plugins;
+
+			for(var key in _obj_plug)
+			{
+				if(_obj_plug[key]["name"]==str_ns)
+				{
+					me.echo("error", "JSB_ERROR_EXTEND_PLUGIN", "[Plugin] Name Space: '" + str_ns + "' define again.");
+					return false;
+				}
+			}
+
 			if (me._get_plugin(_str_name)) {
 
-				me.echo("log", "Plugin: " + cls + " already register.");
+				me.echo("warn", "JSB_ERROR_EXTEND_PLUGIN", "Plugin: " + cls + " already register.");
 
 				return me._get_plugin(_str_name);
 
@@ -254,27 +438,32 @@
 
 		},
 
-		getClassData: function() {
+		getClassData: function(name) {
+
+			if(name)
+			{
+				return _j.data.clss[name];				
+			}
 
 			return _j.data.clss;
 
 		},
 
-		getImportData: function() {
+		getImportData: function(name) {
+
+			if(name){
+				return _j.data.imports[name];
+			}
 
 			return _j.data.imports;
 
 		},
-
-		importClass: function(misc_imports,func_cb) {
+		//*
+		importClass: function(misc_imports,func_cb,func_err) {
 
 			var _str_url = '';
 
-			if(_q.isArray(misc_imports)){
-				var _ary_import = misc_imports; 
-			}else{
-				var _ary_import = [misc_imports];
-			}
+			var _ary_import = _q.isArray(misc_imports)?misc_imports:[misc_imports]; 
 
 			var _ary_xhr = [];
 
@@ -289,10 +478,16 @@
 			};
 
 			if(_ary_xhr.length>0){
-				_q.when.apply( _q, _ary_xhr ).done(function(){
+				_q.when.apply( _q, _ary_xhr ).then(function(){
 					if(_q.isFunction(func_cb)){
 						func_cb.call();
 					}
+				},function(){
+
+					if(_q.isFunction(func_err)){
+						func_err.call();
+					}
+					// console.log("data");
 				});	
 			}else{
 				if(_q.isFunction(func_cb)){
@@ -304,11 +499,11 @@
 
 		removeEventListener: function(str_event,func_cb) {
 
-			_q(_j).off('jsb.' + str_event,func_cb);
+			_q(_j)[_j.event.off]('jsb.' + str_event,func_cb);
 
 		},
-
-		ready:function(func_cb,str_event){
+		//*
+		ready:function(func_cb,func_err,str_event){
 
 			str_event = str_event?str_event:'ready';
 
@@ -321,6 +516,8 @@
 
 				_j.removeEventListener(str_event,_func);
 
+				_j.removeEventListener(str_event+"::ERROR",_err_func);
+
 				if(_q.isFunction(func_cb))
 				{
 					func_cb.call();
@@ -328,7 +525,22 @@
 				
 			}
 
+			var _err_func = function(){
+
+				_j.removeEventListener(str_event,_func);
+
+				_j.removeEventListener(str_event+"::ERROR",_err_func);
+				
+				if(_q.isFunction(func_err))
+				{
+					func_err.call();
+				}
+				
+			}
+
 			_j.addEventListener(str_event,_func);
+			// console.log(str_event+"::ERROR");
+			_j.addEventListener(str_event+"::ERROR",_err_func);
 
 		},
 
@@ -342,34 +554,74 @@
 
 		},
 
-		_xhr:function(str_impcls){
+		_check_cls_infite:function(type,extend,name){
 
-			_str_url = _j._parser_url(str_impcls, '.js');
+			var _obj = _j.data.clss[extend];
 
-			_j.data.imports[str_impcls] = {
-				status: 'progress'
-			};
+			if(!_obj){
+				return true;
+			}else{
+				
+				if(_obj[type]){
 
-			return _q.ajax({
+					var _ary_check = _q.isArray(_obj[type])?_obj[type]:[_obj[type]];
 
-				url: _str_url,
+					for (var i = 0; i < _ary_check.length; i++) {
 
-				dataType: "script",
+						if(_ary_check[i]==name){
 
-				cache: _j.config.imports.cache
+							return false;
 
-			}).done(function(){
+						}else{
 
-				_j.data.imports[str_impcls]["status"] = "success";
+							if(!_j._check_cls_infite(type,_ary_check[i],name))
+							{	
+								return false;
+							}
 
-			}).fail(function(jqXHR, textStatus, errorThrown){
+						}
+					};
+					
+				}
 
-				_j.echo("error", "Require:" + _str_url + " Message:" + errorThrown);
-
-			});
+			}
+			
+			return true;			
 
 		},
 
+		// _check_cls_infite_plugin:function(plug,name){
+
+		// 	var _obj = _j.data.clss[plug];
+
+		// 	if(!_obj){
+
+		// 		return true;
+
+		// 	}else{
+
+		// 		for (var i = 0; i < _obj.plugins.length; i++) {
+
+		// 			if(_obj.plugins[i]==name){
+
+		// 				return false;
+
+		// 			}else{
+
+		// 				if(!_j._check_cls_infite_plugin(_obj.plugins[i],name))
+		// 				{	
+		// 					return false;
+		// 				}
+
+		// 			}
+		// 		};
+
+		// 	}
+			
+		// 	return true;			
+
+		// },
+		/*
 		_check_cls: function(str_cls,func_cb) {
 
 			var me = this;
@@ -384,34 +636,229 @@
 
 			return true;
 
-		},
-
+		},*/
+		//*
 		_check_cls_status:function(str_name){
 
-			if(_j.classReady(str_name))
-			{
-
+			if(_j.classReady(str_name)){
+				// console.log("classReady:",str_name);
 				_j._get_cls(str_name)["ready"] = true;
-
+				// console.log("dispatchEvent:",str_name);
 				_j.dispatchEvent(str_name,str_name);
 
-				var _bol_check = true;
+			}else{
 
-				_q.each(_j.getClassData(), function(i, e) {
-									
-					if(!e.ready){
-						_bol_check = false;
-					}					
-								
-				});
+				var _int_file = _j._get_cls(str_name)["fileRequire"];
+				// console.log("_check",str_name,_int_file);
+				var obj = JSON.stringify(_j.data.clss);
 
-				if(_bol_check)
+				var obj2 = JSON.stringify(_j.data.imports);
+				// console.log(jQuery.parseJSON(obj));
+				// console.log(jQuery.parseJSON(obj2));
+				// console.log(_j.data.loads);
+				if(_int_file==0)
 				{
-					JSB.status = 'complete';
-					_j.dispatchEvent('ready');
+					console.log("classError:",str_name);
+					_j.dispatchEvent(str_name+"::ERROR");
+				}else{
+
+					_j._check_cls_repeat(str_name);
+
 				}
 
 			}
+
+			var _bol_check = true;
+
+			_q.each(_j.getClassData(), function(i, e) {
+				
+				if(!_j.classReady(i)&&!e.ready){
+					// console.log(JSON.stringify(e));
+					_bol_check = false;
+				}					
+							
+			});
+
+			if(_bol_check){
+
+				JSB.status = 'complete';
+				_j.dispatchEvent('ready');
+
+			}else{
+				
+				if(_j._file_all_load())
+				{
+					JSB.status = 'fail';
+					_j.dispatchEvent('ready::ERROR');
+				}
+
+			}
+
+			
+			// _q.each(_j.getClassData(), function(i, e) {
+								
+			// 	if(!e.ready||e.fileRequire==0){
+			// 		_bol_check = false;
+			// 	}					
+							
+			// });
+
+		},
+
+		_check_cls_repeat:function(str_name){
+
+			//如果該Class有被載入
+			// console.log(_j._check_last_cls(str_name),str_name);
+			if(_j._check_last_cls(str_name))
+			{
+
+				var _obj_status = _j.data.clss[str_name]["status"];
+
+				if(_obj_status.imports!==true)
+				{
+					
+					for (var i = 0; i < _obj_status.imports.length; i++) {
+						
+						var name = _obj_status.imports[i];
+						var imports = _j.data.imports[name];
+						if(imports&&imports["status"]=="success"){
+							// console.log("!!!!YES",str_name);
+							_j._update_cls_status(str_name,"imports",name);
+							_j._file_require_decrease(str_name);
+							// _j._get_cls(str_name)["fileRequire"]--;
+							_j._check_cls_status(str_name);
+						}
+					};
+
+				}
+
+				if(_obj_status.plugins!==true)
+				{
+					
+					for (var i = 0; i < _obj_status.plugins.length; i++) {
+						
+						var name = _obj_status.plugins[i];
+						var imports = _j.data.imports[name];
+						if(imports&&imports["status"]=="success"){
+							// console.log("!!!!YES",str_name);
+							_j._update_cls_status(str_name,"plugins",name);
+							_j._file_require_decrease(str_name);
+							// _j._get_cls(str_name)["fileRequire"]--;
+							_j._check_cls_status(str_name);
+						}
+					};
+
+				}
+
+				if(_obj_status.extend!==true)
+				{
+					
+					for (var i = 0; i < _obj_status.extend.length; i++) {	
+
+						var name = _obj_status.extend[i];
+
+						var imports = _j.data.imports[name];
+
+						if(imports&&imports["status"]=="success"){
+							// console.log("!!!!YES",str_name);
+							_j._update_cls_status(str_name,"extend",name);
+							_j._file_require_decrease(str_name);
+							// _j._get_cls(str_name)["fileRequire"]--;
+							_j._check_cls_status(str_name);
+						}
+
+					}
+
+				}
+
+
+				// console.log("data");
+
+
+			}
+
+		},
+
+		_check_last_cls:function(str_name){
+
+			if(_j.data.imports[str_name])
+			{
+
+				var _ary_load = _j.data.loads;
+
+				for (var i = _ary_load.length-1; i >= 0; i--) {
+					
+					var name = _ary_load[i];
+
+					if(name==str_name){
+
+						return true;
+
+					}else{
+
+						var _obj_import = _j.data.imports[name];
+
+						if(_obj_import["status"]!="success")
+						{
+							return false;
+						}
+
+					}
+
+				};
+
+			}
+
+			return false;
+
+		},
+
+		//檢查所有class的需要依賴的檔案是否已經全部嘗試載入
+		_file_all_load:function(){
+
+			var _bol_check = true;
+
+			_q.each(_j.getClassData(), function(i, e) {
+								
+				if(e.fileRequire > 0){
+					_bol_check = false;
+				}					
+							
+			});
+
+			return _bol_check;
+
+		},
+
+		//需要引用的檔案數
+		_file_require_count:function(name){
+
+			var me = this;
+
+			var _int_count = 0;
+
+			var obj = me.data.clss[name];
+
+			for(var key in obj["status"]){
+				
+				if(_q.isArray(obj["status"][key])){
+					_int_count += obj["status"][key]["length"];
+				}
+
+			}
+
+			obj["fileRequire"] = _int_count;
+
+		},
+
+		_file_require_decrease:function(name)
+		{
+
+			var me = this;
+
+			var obj = me.data.clss[name];
+
+			obj["fileRequire"]--;
 
 		},
 
@@ -462,183 +909,19 @@
 			}
 
 		},
+		
+		//*
+		_init_cls:function(){
 
-		_init_cls: function() {
+			_j.cls.prototype = {
 
-			var me = this;
-
-			me.cls = function(str_name, obj_cls) {
-
-				if (me._get_cls(str_name)) {
-
-					me.echo("warn", "CLASS:'" + str_name + "' define again");
-
-					return true;
-
-				}
-
-				JSB.status = "progress";
-
-				var _jsb_cls = function(misc_opt) {
-
-					obj_cls.plugins = obj_cls.plugins ? obj_cls.plugins : [];
-
-					this.className = str_name;
-
-					this._ary_extend = [];
-
-					this._count = 0;
-
-					this._destroy = false;
-					//class extend super
-					this._extend(this);
-
-					this._plugin(obj_cls.plugins);
-
-					this.initialize(misc_opt);
-
-					this.SUPER();
-
-					delete this._count;
-
-					return true;
-
-				};
-
-				me.data.clss[str_name] = {
-					cls: _jsb_cls,
-					config: {
-						name: str_name,
-						single: obj_cls.single ? true : false,
-						abstr: obj_cls.abstr ? true : false
-					},
-					ready:false,
-					status:{
-						extend:obj_cls.extend?[obj_cls.extend]:true,
-						plugins:obj_cls.plugins?obj_cls.plugins.slice():true,
-						css:obj_cls.css?obj_cls.css.slice():true,
-						tpl:obj_cls.tpl?obj_cls.tpl.slice():true,
-						imports:obj_cls.imports?obj_cls.imports.slice():true
-					}
-				};
-
-				_q.extend(_jsb_cls.prototype, me.cls.prototype, obj_cls);
-
-				if (obj_cls.imports) {
-
-					for (var i = 0; i < obj_cls.imports.length; i++) {
-
-						_j._parser_imports(str_name,obj_cls.imports[i]);
-
-					};
-
-				}
-
-				if (obj_cls.extend) {
-
-					if(!me._check_cls(obj_cls.extend)||!_j.classReady(obj_cls.extend)){
-
-						_j.addEventListener(obj_cls.extend,function(e,misc_scope,str_cls){
-
-							_q.extend(
-								_jsb_cls.prototype,
-								me.cls.prototype,
-								me._get_cls(obj_cls.extend)["cls"].prototype,
-								obj_cls
-							);
-
-							me._set_cls_status(str_name,'extend',str_cls);
-
-							_j.removeEventListener(str_cls);
-
-						});
-
-					}else{
-
-						_q.extend(
-							_jsb_cls.prototype,
-							me.cls.prototype,
-							me._get_cls(obj_cls.extend)["cls"].prototype,
-							obj_cls
-						);
-
-						me._set_cls_status(str_name,'extend',obj_cls.extend);
-
-					}
-
-				}
-
-				if (obj_cls.plugins) {
-
-					for (var i = 0; i < obj_cls.plugins.length; i++) {
-						
-						var _plug = obj_cls.plugins[i];
-
-						if(!me._check_cls(_plug)||!_j.classReady(_plug)){
-							//waiting async
-							_j.addEventListener(_plug,function(e,misc_scope,str_cls){
-
-								me._set_cls_status(str_name,'plugins',str_cls);
-
-								_j.removeEventListener(str_cls);
-
-							});
-
-						}else{
-
-							me._set_cls_status(str_name,'plugins',_plug);
-
-						}
-
-					};
-
-				}
-
-				if (obj_cls.tpl) {
-
-					var _ary_file = _q.isArray(obj_cls.tpl) ? obj_cls.tpl : obj_cls.tpl.files;
-
-					for (var i = 0; i < _ary_file.length; i++) {
-
-						_j._parser_tpl(str_name,_ary_file[i]);
-
-					};
-
-				}
-
-				if (obj_cls.css) {
-
-					var _ary_file = _q.isArray(obj_cls.css) ? obj_cls.css : obj_cls.css.files;
-
-					for (var i = 0; i < _ary_file.length; i++) {
-
-						_j._parser_css(str_name,_ary_file[i]);
-
-					};
-
-				}
-
-				setTimeout(function() {
-
-					me._check_cls_status(str_name);
-
-				}, 1);
-				
-				return me.data.clss[str_name];
-
-			};
-
-			me.cls.prototype = {
-
-				_plugin: function(ary_plugins) {
-
-					this._ary_plugin = _q.merge([], ary_plugins);
+				_plugin: function() {
 
 					var _ary_plugin = [];
 
-					_q.each(this._ary_plugin, function(i, e) {
+					_q.each(this.__plugins, function(i, e) {
 						//filter same name plugin
-						if (_q.inArray(e, _ary_plugin) == -1 && me.className != e) {
+						if (_q.inArray(e, _ary_plugin) == -1 && _j.className != e) {
 							_ary_plugin.push(e);
 						}
 					});
@@ -647,9 +930,9 @@
 
 						for (var i = 0; i < _ary_plugin.length; i++) {
 
-							me._check_cls(_ary_plugin[i]);
+							// _j._check_cls(_ary_plugin[i]);
 
-							var _obj_plug = me._get_plugin(_ary_plugin[i]);
+							var _obj_plug = _j._get_plugin(_ary_plugin[i]);
 
 							this[_obj_plug.name] = _j.create(_ary_plugin[i], this,false);
 
@@ -658,20 +941,32 @@
 					}
 
 				},
-
+				//TODO:優化message
 				_extend: function(misc_scope) {
+
+					var me = this;
 
 					var _str_extend = misc_scope.extend;
 
 					if (_str_extend) {
 
-						this._ary_extend.push(misc_scope.extend);
+						this.__extend.push(misc_scope.extend);
 
 						var _ns_cls = _j._get_cls(_str_extend)["cls"];
 
 						if (_ns_cls.prototype) {
 
-							this._extend(_ns_cls.prototype);
+							// try{
+								this._extend(_ns_cls.prototype);
+							// }catch(e){
+
+									// _j.echo("error",_str_extend, "Extend: infinite loop.");
+								// console.log("XDDDD");
+								// console.log(e.message);
+								
+								// _j.echo("error", this, "already destroy");
+							// }
+							
 
 						}
 
@@ -681,15 +976,15 @@
 
 				SUPER: function() {
 
-					if (this._ary_extend.length > 0 && this._count < this._ary_extend.length) {
+					if (this.__extend.length > 0 && this.__count < this.__extend.length) {
 
-						var _str_extend = this._ary_extend[this._count];
+						var _str_extend = this.__extend[this.__count];
 
 						if (_str_extend) {
 
 							var _proto_class = _j._get_cls(_str_extend)["cls"].prototype;
 
-							this._count++;
+							this.__count++;
 
 							_proto_class.initialize.apply(this, arguments);
 
@@ -707,8 +1002,8 @@
 
 				destroy: function() {
 
-					if (this._destroy) {
-						_j.echo("error", this, "already destroy");
+					if (this.__destroy) {
+						_j.echo("error", "JSB_ERROR_CLASS_DESTROY","Class:"+ this.className +" already destroy.");
 						return true;
 					}
 
@@ -724,7 +1019,7 @@
 
 					_q(_j).triggerHandler('jsb.destroy', this);
 
-					this._destroy = true;
+					this.__destroy = true;
 
 					return this;
 
@@ -766,9 +1061,36 @@
 
 					_q(this)[_j.event.off]('cls.' + str_event);
 
-				},
+				}
 
-				initialize: function() {}
+			}
+
+		},
+
+		_parser_callback:function(str_name,str_file,done,fail){
+
+			var _obj_import_status = _j.data.imports[str_file];
+
+			//檢查要被載入的檔案是否已載入
+			if(!_j._get_cls(str_file) && !_obj_import_status){
+
+				_j.importClass(str_file,function(){
+					_j.classReady(str_file,function(){
+						done.call();
+					},function(){
+						fail.call();
+					});
+				},function(){
+					fail.call();
+				});
+
+			}else{
+
+				_j.classReady(str_file,function(){
+					done.call();
+				},function(){
+					fail.call();
+				});	
 
 			}
 
@@ -776,73 +1098,72 @@
 
 		_parser_imports: function(str_name,str_file) {
 
-			if(!_j._get_cls(str_file)&&!_j.data.imports[str_file]){
-
-				_j.importClass(str_file,function(){
-
-					_j._set_cls_status(str_name,'imports',str_file);
-
-				});
-
-			}else{
-
+			_j._parser_callback(str_name,str_file,function(){
 				_j._set_cls_status(str_name,'imports',str_file);
+			},function(){
+				_j._set_cls_status(str_name,'fail', str_file);
+			});
 
-			}
+		},
+
+		_parser_extend: function(jsbcls,cls,str_name,str_file) {
+
+			_j._parser_callback(str_name,str_file,function(){
+
+				_q.extend(
+					jsbcls.prototype,
+					_j.cls.prototype,
+					_j._get_cls(str_file)["cls"].prototype,
+					cls
+				);
+
+				_j._set_cls_status(str_name,'extend',str_file);
+			},function(){
+				_j._set_cls_status(str_name,'fail', str_file);
+			});
+
+		},
+
+		_parser_plugin: function(str_name,str_file) {
+
+			_j._parser_callback(str_name,str_file,function(){
+				_j._set_cls_status(str_name,'plugins',str_file);
+			},function(){
+				_j._set_cls_status(str_name,'fail', str_file);
+			});
 
 		},
 
 		_parser_css: function(str_name,str_file) {
 
-			if(str_file.match(/^(http|https):\/\//g)){
+			_q.ajax({
+				type: "GET",
+				cache:false,
+				dataType:'text',
+				url: _j._parser_url(str_file)
+			}).done(function(data){
 
-				var _el_style = document.createElement("link");
+				var _el_style = document.createElement("style");
 
-				_q(_el_style).attr("type", "text/css");
-				
-				_q(_el_style).attr("rel", "stylesheet");
-
-				_q(_el_style).attr('jsb-css', str_name);
-
-				_q(_el_style).attr('href', str_file);
+				_q(_el_style)
+					.attr("type", "text/css")
+					.attr('jsb-css', str_name);
+		
+				if (_el_style.styleSheet) {
+					_el_style.styleSheet.cssText = data;
+				} else {
+					_el_style.innerHTML = data;
+				}
 
 				_q(_el_style).appendTo('head');
 
-				_q(_el_style).load(function(){
-					_j._set_cls_status(str_name,'css',str_file);
-				});
-				
+				_j._set_cls_status(str_name,'css',str_file);
 
-			}else{
+			}).fail(function(){
 
-				_q.ajax({
-					type: "GET",
-					dataType:'text',
-					url: _j._parser_url(str_file)
-				}).done(function(data){
+				_j._set_cls_status(str_name,'fail',str_file);
 
-					var _el_style = document.createElement("style");
-
-					_q(_el_style).attr("type", "text/css");
-
-					_q(_el_style).attr('jsb-css', str_name);
-			
-					if (_el_style.styleSheet) {
-
-						_el_style.styleSheet.cssText = data;
-
-					} else {
-
-						_el_style.innerHTML = data;
-
-					}
-
-					_q(_el_style).appendTo('head');
-
-					_j._set_cls_status(str_name,'css',str_file);
-
-				});
-			}
+			});
 			
 		},
 
@@ -850,19 +1171,22 @@
 
 			_q.ajax({
 				type: "GET",
+				cache:false,
 				dataType: "html",
-				url: _j._parser_url(str_file),
-				success: function(data) {
+				url: _j._parser_url(str_file)
+			}).done(function(data){
 
-					var _ary_el = _q(data);
+				var _ary_el = _q(data);
 
-					_ary_el.attr('jsb-tpl', str_name);
+				_ary_el.attr('jsb-tpl', str_name);
 
-					_ary_el.appendTo('head');
+				_ary_el.appendTo('head');
 
-					_j._set_cls_status(str_name,'tpl',str_file);
+				_j._set_cls_status(str_name,'tpl',str_file);
 
-				}
+			}).fail(function(){
+
+				_j._set_cls_status(str_name,'fail',str_file);				
 
 			});
 
@@ -902,27 +1226,45 @@
 
 			}
 
-			if (str_url.match(/^(http|https):\/\//g)) {
+			// if (str_url.match(/^(http|https):\/\//g)) {
 
-				_str_url = str_url;
+				// _str_url = str_url;
 
-			}else{
+			// }else{
 
 				_str_url = _str_path + str_url + (str_ext ? str_ext : '');
 
-			}
-
+			// }
+			// console.log(_str_url);
 			if (misc && _q.isFunction(misc.parser)) {
 
-				_str_url = misc.parser.call(misc, _str_url);
+				_str_url = misc.parser.call(misc,_str_url);
 
 			}
 
 			return _str_url;
 
 		},
-
+		//*
 		_set_cls_status:function(str_name,str_type,str_value){
+
+			if(str_type!="fail"){
+
+				_j._update_cls_status(str_name,str_type,str_value);
+
+			}else{
+
+				_j.dispatchEvent(str_value+"::ERROR");
+
+			}
+			// console.log("str_type",str_type,str_name,str_value);
+			this._file_require_decrease(str_name);
+			// _j._get_cls(str_name)["fileRequire"]--;
+			_j._check_cls_status(str_name);
+
+		},
+
+		_update_cls_status:function(str_name,str_type,str_value){
 
 			var _ary = _j._get_cls(str_name)["status"][str_type];
 
@@ -941,18 +1283,54 @@
 				_j._get_cls(str_name)["status"][str_type] = true;
 			}
 
-			_j._check_cls_status(str_name);
+		},
+
+		_xhr:function(str_impcls){
+
+			_str_url = _j._parser_url(str_impcls, '.js');
+
+			_j.data.imports[str_impcls] = {
+				status: 'progress'
+			};
+
+			_j.data.loads.push(str_impcls);
+
+			return _q.ajax({
+
+				url: _str_url,
+
+				dataType: "script",
+
+				cache: _j.config.imports.cache
+
+			}).done(function(){
+
+				_j.data.imports[str_impcls]["status"] = "success";
+
+			}).fail(function(jqXHR, textStatus, errorThrown){
+
+				// for (var i = 0; i < _j.data.loads.length; i++) {
+				// 	if(_j.data.loads[i]==str_impcls){
+				// 		_j.data.loads.splice(i,1);
+				// 	}
+				// };
+
+				_j.data.imports[str_impcls]["status"] = "fail";
+
+				_j.echo("error", "JSB_ERROR_CLASS_IMPORT","Require:" + _str_url + " Message:" + errorThrown);
+
+			});
 
 		}
 
 	}
-
-	JSB._init_cls();
 
 	window.JSB = JSB;
 
 	if(!window.jsb) { window.jsb = JSB };
 
 	if(!window._j) { window._j = JSB };
+
+	JSB._init_cls();
 
 })(window);
