@@ -25,8 +25,10 @@
 		"type": "git",
 		"url": "https://github.com/tureki/jsborn.git"
 	},
+	"dependencies": {
+		"jquery": ">= 2.0.0"
+	},
 	"devDependencies": {
-		"jquery": ">= 2.0.0",
 		"jquery.1.5": "http://code.jquery.com/jquery-1.5.min.js",
 		"jquery.1.6": "http://code.jquery.com/jquery-1.6.min.js",
 		"jquery.1.7": "http://code.jquery.com/jquery-1.7.min.js",
