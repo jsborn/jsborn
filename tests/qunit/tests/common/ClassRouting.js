@@ -1,4 +1,4 @@
-JSB.cls("qunit/tests/common/ClassRouting", {
+_b.define("qunit/tests/common/ClassRouting", {
 	
 	initialize: function(options) {
 

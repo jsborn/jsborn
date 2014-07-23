@@ -1,4 +1,4 @@
-JSB.extendPlugin("plugin",JSB.cls("qunit/tests/plugin/ClassNode", {
+_b.registerPlugin("plugin",_b.define("qunit/tests/plugin/ClassNode", {
 
 	// extend:"qunit/tests/plugin/Class",
 

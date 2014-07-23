@@ -1,4 +1,4 @@
-JSB.cls("qunit/tests/extend/ClassParent", {
+_b.define("qunit/tests/extend/ClassParent", {
 	
 	// extend:"qunit/tests/extend/ClassNode",
 	

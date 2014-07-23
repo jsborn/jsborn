@@ -1,4 +1,4 @@
-JSB.addEventListener("log",function(e,message)
+_b.addEventListener("log",function(e,message)
 {
 	console.log("log",message);
 });
@@ -7,7 +7,7 @@ QUnit.asyncTest( "Plugins Class Test", function( assert ) {
 
 	expect(2);
 
-	JSB.cls("tests/plugin/Class", {
+	_b.define("tests/plugin/Class", {
 
 		plugins:[
 			"qunit/tests/plugin/ClassParent"
@@ -20,9 +20,9 @@ QUnit.asyncTest( "Plugins Class Test", function( assert ) {
 
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 
-		var _cls  = JSB.create("tests/plugin/Class");
+		var _cls  = _b.create("tests/plugin/Class");
 		// console.log(_cls);
 		assert.ok( _cls.plugin3 !== false, "_cls.plugin" );
 
@@ -42,7 +42,7 @@ QUnit.asyncTest( "Plugins Register Error Test", function( assert ) {
 
 	expect(2);
 
-	JSB.cls("tests/plugin/Class", {
+	_b.define("tests/plugin/Class", {
 
 		plugins:[
 			"qunit/tests/plugin/ClassParent"
@@ -55,7 +55,7 @@ QUnit.asyncTest( "Plugins Register Error Test", function( assert ) {
 
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 
 		var func = function(e,status){
 
@@ -66,9 +66,9 @@ QUnit.asyncTest( "Plugins Register Error Test", function( assert ) {
 
 		};
 
-		JSB.addEventListener("log",func);
+		_b.addEventListener("log",func);
 
-		JSB.extendPlugin("plugin3",JSB.cls("tests/plugin/ClassParent", {
+		_b.registerPlugin("plugin3",_b.define("tests/plugin/ClassParent", {
 
 			initialize: function(options) {
 
@@ -78,10 +78,10 @@ QUnit.asyncTest( "Plugins Register Error Test", function( assert ) {
 
 		}));
 
-		JSB.extendPlugin("testError2",JSB.getClassData("qunit/tests/plugin/ClassParent"));
+		_b.registerPlugin("testError2",_b.getClassData("qunit/tests/plugin/ClassParent"));
 
 
-		JSB.removeEventListener("log",func);
+		_b.removeEventListener("log",func);
 		QUnit.start();
 
 	},function(){
@@ -96,7 +96,7 @@ QUnit.asyncTest( "Plugins Class Depth Test", function( assert ) {
 
 	expect(4);
 
-	JSB.cls("tests/plugin/ClassDepth", {
+	_b.define("tests/plugin/ClassDepth", {
 
 		plugins:[
 			"qunit/tests/plugin/ClassNode",
@@ -109,9 +109,9 @@ QUnit.asyncTest( "Plugins Class Depth Test", function( assert ) {
 
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 
-		var _cls  = JSB.create("tests/plugin/ClassDepth");
+		var _cls  = _b.create("tests/plugin/ClassDepth");
 
 		assert.ok( _cls.plugin !== false, "_cls.plugin" );
 		
@@ -135,7 +135,7 @@ QUnit.asyncTest( "Plugins Class Multi Test", function( assert ) {
 
 	expect(5);
 
-	JSB.cls("tests/plugin/ClassMulti", {
+	_b.define("tests/plugin/ClassMulti", {
 
 		plugins:[
 			"qunit/tests/plugin/Class",
@@ -150,9 +150,9 @@ QUnit.asyncTest( "Plugins Class Multi Test", function( assert ) {
 
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 
-		var _cls  = JSB.create("tests/plugin/ClassMulti");
+		var _cls  = _b.create("tests/plugin/ClassMulti");
 
 		assert.ok( _cls.plugin !== false, "_cls.plugin" );
 
@@ -178,7 +178,7 @@ QUnit.asyncTest( "Plugins Class Test Fail", function( assert ) {
 
 	expect(1);
 
-	JSB.cls("tests/plugin/ClassFail", {
+	_b.define("tests/plugin/ClassFail", {
 
 		plugins:[
 			"qunit/tests/plugin/Class",
@@ -192,7 +192,7 @@ QUnit.asyncTest( "Plugins Class Test Fail", function( assert ) {
 
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 
 		QUnit.start();
 
@@ -210,7 +210,7 @@ QUnit.asyncTest( "Plugins Class Infinite Loop Test", function( assert ) {
 	
 	expect(1);
 
-	JSB.cls("tests/plugin/ClassInfinite", {
+	_b.define("tests/plugin/ClassInfinite", {
 		
 		plugins:["qunit/tests/plugin/ClassInfiniteLevel1"],
 
@@ -220,7 +220,7 @@ QUnit.asyncTest( "Plugins Class Infinite Loop Test", function( assert ) {
 
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		QUnit.start();
 	},function(){
 		assert.ok( true, "all class Fail" );

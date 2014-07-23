@@ -190,8 +190,8 @@ module.exports = function(grunt) {
 				loopfunc: true,
 				newcap: true,
 				noarg: true,
+				// undef: true,
 				sub: true,
-				undef: true,
 				white: true
 			}
 		},
@@ -215,9 +215,9 @@ module.exports = function(grunt) {
 			},
 			all: [
 				'<%= dirs.test %>/jquery/**.html',
-				'<%= dirs.test %>/jquery.1.9/**.html',
-				'<%= dirs.test %>/jquery.1.8/**.html',
-				'<%= dirs.test %>/jquery.1.7/**.html',
+				// '<%= dirs.test %>/jquery.1.9/**.html',
+				// '<%= dirs.test %>/jquery.1.8/**.html',
+				// '<%= dirs.test %>/jquery.1.7/**.html',
 				'<%= dirs.test %>/jquery.1.6/**.html'
 			]
 		},
@@ -245,7 +245,8 @@ module.exports = function(grunt) {
 
 	grunt.registerTask('default', 'build');
 	// grunt.registerTask('build',   ['copy', 'jshint', 'uglify']);
-	grunt.registerTask('build',   ['copy', 'uglify','mustache_render','qunit','coveralls']);
+	// grunt.registerTask('build',   ['copy', 'uglify', 'jshint','mustache_render','qunit','coveralls']);
+	grunt.registerTask('build',   ['copy', 'uglify', 'jshint','mustache_render','qunit']);
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-uglify');

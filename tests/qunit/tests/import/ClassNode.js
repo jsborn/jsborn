@@ -1,4 +1,4 @@
-JSB.cls("qunit/tests/import/ClassNode", {
+_b.define("qunit/tests/import/ClassNode", {
 	
 	imports:[
 		"qunit/tests/import/Class"

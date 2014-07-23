@@ -1,4 +1,4 @@
-JSB.cls("qunit/tests/extend/ClassFail", {
+_b.define("qunit/tests/extend/ClassFail", {
 
 	extend:"error/imports",
 

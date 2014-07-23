@@ -1,4 +1,4 @@
-JSB.cls("qunit/tests/import/ClassInfiniteLevel3", {
+_b.define("qunit/tests/import/ClassInfiniteLevel3", {
 	
 	imports:[
 		"qunit/tests/import/ClassInfiniteLevel1"

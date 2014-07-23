@@ -1,4 +1,4 @@
-JSB.addEventListener("log",function(e,message)
+_b.addEventListener("log",function(e,message)
 {
 	console.log(message);
 });
@@ -7,7 +7,7 @@ QUnit.asyncTest( "Class CSS test", function( assert ) {
 
 	expect(2);
 
-	JSB.cls("tests/css/Class", {
+	_b.define("tests/css/Class", {
 		
 		css:["qunit/tests/css/Class.css"],
 
@@ -19,28 +19,28 @@ QUnit.asyncTest( "Class CSS test", function( assert ) {
 
 	});
 
-	JSB.classReady("tests/css/Class",function(){
-		assert.ok( JSB.create("tests/css/Class")!==false , "tests/css/Class object create!" );		
+	_b.classReady("tests/css/Class",function(){
+		assert.ok( _b.create("tests/css/Class")!==false , "tests/css/Class object create!" );		
 	},function(){
 		QUnit.start();
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		assert.ok( true , "all Class Ready!" );		
 		QUnit.start();
 	},function(){
 		QUnit.start();
 	});
 
-	// var _cls = JSB.create("tests/common/Class",{"data":"hello world"});
+	// var _cls = _b.create("tests/common/Class",{"data":"hello world"});
 
-	// assert.ok( _cls.className == "tests/common/Class" , "tests/common/Class object create!" );
+	// assert.ok( _cls.getName() == "tests/common/Class" , "tests/common/Class object create!" );
 
 });
 
 QUnit.asyncTest( "Class Multi CSS test", function( assert ) {
 
-	JSB.cls("tests/css/ClassMulti", {
+	_b.define("tests/css/ClassMulti", {
 		
 		css:[
 			"qunit/tests/css/Class.css",
@@ -56,8 +56,8 @@ QUnit.asyncTest( "Class Multi CSS test", function( assert ) {
 
 	});
 
-	JSB.classReady("tests/css/ClassMulti",function(){
-		var _cls = JSB.create("tests/css/ClassMulti");
+	_b.classReady("tests/css/ClassMulti",function(){
+		var _cls = _b.create("tests/css/ClassMulti");
 		assert.ok( _cls.getCss().length === 3 , "tests/css/ClassMulti" );
 		assert.ok( _cls.getCss("tests/css/Class").length === 1 , "tests/css/ClassMulti" );
 		assert.ok( true , "tests/css/ClassMulti object create!" );		
@@ -65,16 +65,16 @@ QUnit.asyncTest( "Class Multi CSS test", function( assert ) {
 		QUnit.start();
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		assert.ok( true , "all Class Ready!" );		
 		QUnit.start();
 	},function(){
 		QUnit.start();
 	});
 
-	// var _cls = JSB.create("tests/common/Class",{"data":"hello world"});
+	// var _cls = _b.create("tests/common/Class",{"data":"hello world"});
 
-	// assert.ok( _cls.className == "tests/common/Class" , "tests/common/Class object create!" );
+	// assert.ok( _cls.getName() == "tests/common/Class" , "tests/common/Class object create!" );
 
 });
 
@@ -82,7 +82,7 @@ QUnit.asyncTest( "Class CSS Error test", function( assert ) {
 
 	expect(2);
 
-	JSB.cls("tests/css/ClassError", {
+	_b.define("tests/css/ClassError", {
 		
 		css:[
 			"qunit/tests/css/Class.css",
@@ -99,21 +99,21 @@ QUnit.asyncTest( "Class CSS Error test", function( assert ) {
 
 	});
 
-	JSB.classReady("tests/css/ClassError",function(){
+	_b.classReady("tests/css/ClassError",function(){
 		QUnit.start();
 	},function(){
 		assert.ok( true , "tests/css/ClassError!" );		
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		QUnit.start();
 	},function(){
 		assert.ok( true , "Class Fail!" );		
 		QUnit.start();
 	});
 
-	// var _cls = JSB.create("tests/common/Class",{"data":"hello world"});
+	// var _cls = _b.create("tests/common/Class",{"data":"hello world"});
 
-	// assert.ok( _cls.className == "tests/common/Class" , "tests/common/Class object create!" );
+	// assert.ok( _cls.getName() == "tests/common/Class" , "tests/common/Class object create!" );
 
 });

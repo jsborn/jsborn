@@ -1,4 +1,4 @@
-JSB.addEventListener("log",function(e,message)
+_b.addEventListener("log",function(e,message)
 {
 	console.log(message);
 });
@@ -7,7 +7,7 @@ QUnit.asyncTest( "Extend Class Test", function( assert ) {
 
 	expect(5);
 
-	JSB.cls("tests/extend/ClassParent", {
+	_b.define("tests/extend/ClassParent", {
 		
 		hello:function(){
 
@@ -23,7 +23,7 @@ QUnit.asyncTest( "Extend Class Test", function( assert ) {
 
 	});
 
-	JSB.cls("tests/extend/ClassNodeSuper", {
+	_b.define("tests/extend/ClassNodeSuper", {
 		
 		extend:"tests/extend/ClassParent",
 
@@ -41,7 +41,7 @@ QUnit.asyncTest( "Extend Class Test", function( assert ) {
 
 	});
 
-	JSB.cls("tests/extend/ClassNode", {
+	_b.define("tests/extend/ClassNode", {
 		
 		extend:"tests/extend/ClassParent",
 
@@ -53,11 +53,11 @@ QUnit.asyncTest( "Extend Class Test", function( assert ) {
 
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 
-		var _cls_node_super  = JSB.create("tests/extend/ClassNodeSuper");
+		var _cls_node_super  = _b.create("tests/extend/ClassNodeSuper");
 	
-		var _cls_node = JSB.create("tests/extend/ClassNode");
+		var _cls_node = _b.create("tests/extend/ClassNode");
 
 		assert.ok( _cls_node_super.hello, "hello properties not null!" );
 
@@ -79,7 +79,7 @@ QUnit.asyncTest( "Extend Class async Test", function( assert ) {
 
 	expect(4);
 
-	JSB.cls("tests/extend/Class", {
+	_b.define("tests/extend/Class", {
 		
 		extend:"qunit/tests/extend/ClassNode",
 
@@ -90,9 +90,9 @@ QUnit.asyncTest( "Extend Class async Test", function( assert ) {
 
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 
-		var _cls = JSB.create("tests/extend/Class");
+		var _cls = _b.create("tests/extend/Class");
 		assert.ok( _cls !== false, "tests/extend/Class" );
 		assert.ok( _cls.a() === true, "tests/extend/Class a()" );
 		assert.ok( _cls.b() === true, "tests/extend/Class b()" );
@@ -112,7 +112,7 @@ QUnit.asyncTest( "Import Class Test Error Require", function( assert ) {
 	
 	expect(2);
 
-	JSB.cls("tests/extend/ClassFail", {
+	_b.define("tests/extend/ClassFail", {
 		
 		extend:"qunit/tests/extend/ClassFail",
 
@@ -122,14 +122,14 @@ QUnit.asyncTest( "Import Class Test Error Require", function( assert ) {
 
 	});
 
-	JSB.classReady("tests/extend/ClassFail",function(){
+	_b.classReady("tests/extend/ClassFail",function(){
 		
 
 	},function(){
 		assert.ok( true, "tests/extend/ClassFail Fail" );
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		QUnit.start();
 	},function(){
 		assert.ok( true, "all class Fail" );
@@ -142,7 +142,7 @@ QUnit.asyncTest( "Import Class Infinite Loop Test", function( assert ) {
 	
 	expect(1);
 
-	JSB.cls("tests/extend/ClassInfinite", {
+	_b.define("tests/extend/ClassInfinite", {
 		
 		extend:"qunit/tests/extend/ClassInfiniteLevel1",
 
@@ -152,7 +152,7 @@ QUnit.asyncTest( "Import Class Infinite Loop Test", function( assert ) {
 
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		QUnit.start();
 	},function(){
 		assert.ok( true, "all class Fail" );

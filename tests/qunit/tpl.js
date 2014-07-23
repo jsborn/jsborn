@@ -1,4 +1,4 @@
-JSB.addEventListener("log",function(e,message)
+_b.addEventListener("log",function(e,message)
 {
 	console.log(message);
 });
@@ -7,7 +7,7 @@ QUnit.asyncTest( "Class TPL test", function( assert ) {
 
 	expect(2);
 
-	JSB.cls("tests/tpl/Class", {
+	_b.define("tests/tpl/Class", {
 		
 		tpl:["qunit/tests/tpl/tpl.html"],
 
@@ -19,22 +19,22 @@ QUnit.asyncTest( "Class TPL test", function( assert ) {
 
 	});
 
-	JSB.classReady("tests/tpl/Class",function(){
-		assert.ok( JSB.create("tests/tpl/Class")!==false , "tests/tpl/Class object create!" );		
+	_b.classReady("tests/tpl/Class",function(){
+		assert.ok( _b.create("tests/tpl/Class")!==false , "tests/tpl/Class object create!" );		
 	},function(){
 		QUnit.start();
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		assert.ok( true , "all Class Ready!" );		
 		QUnit.start();
 	},function(){
 		QUnit.start();
 	});
 
-	// var _cls = JSB.create("tests/common/Class",{"data":"hello world"});
+	// var _cls = _b.create("tests/common/Class",{"data":"hello world"});
 
-	// assert.ok( _cls.className == "tests/common/Class" , "tests/common/Class object create!" );
+	// assert.ok( _cls.getName() == "tests/common/Class" , "tests/common/Class object create!" );
 
 });
 
@@ -42,7 +42,7 @@ QUnit.asyncTest( "Class Multi TPL test", function( assert ) {
 
 	expect(6);
 
-	JSB.cls("tests/tpl/ClassMulti", {
+	_b.define("tests/tpl/ClassMulti", {
 		
 		tpl:[
 			"qunit/tests/tpl/tpl.html",
@@ -58,9 +58,9 @@ QUnit.asyncTest( "Class Multi TPL test", function( assert ) {
 
 	});
 
-	JSB.classReady("tests/tpl/ClassMulti",function(){
+	_b.classReady("tests/tpl/ClassMulti",function(){
 
-		var _cls = JSB.create("tests/tpl/ClassMulti");
+		var _cls = _b.create("tests/tpl/ClassMulti");
 
 		assert.ok( _cls.getTpl().length === 3 , "tests/common/ClassMulti get tempalte count!" );
 		assert.ok( jQuery.trim(_cls.getTpl("tpl","tests/tpl/Class").html()) === "<div>hi</div>" , "tests/common/ClassMulti get tempalte count!" );
@@ -75,16 +75,16 @@ QUnit.asyncTest( "Class Multi TPL test", function( assert ) {
 		QUnit.start();
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		assert.ok( true , "all Class Ready!" );		
 		QUnit.start();
 	},function(){
 		QUnit.start();
 	});
 
-	// var _cls = JSB.create("tests/common/Class",{"data":"hello world"});
+	// var _cls = _b.create("tests/common/Class",{"data":"hello world"});
 
-	// assert.ok( _cls.className == "tests/common/Class" , "tests/common/Class object create!" );
+	// assert.ok( _cls.getName() == "tests/common/Class" , "tests/common/Class object create!" );
 
 });
 
@@ -93,7 +93,7 @@ QUnit.asyncTest( "Class TPL Error test", function( assert ) {
 
 	expect(2);
 
-	JSB.cls("tests/tpl/ClassError", {
+	_b.define("tests/tpl/ClassError", {
 		
 		tpl:[
 			"qunit/tests/tpl/tpl.html",
@@ -110,21 +110,21 @@ QUnit.asyncTest( "Class TPL Error test", function( assert ) {
 
 	});
 
-	JSB.classReady("tests/tpl/ClassError",function(){
+	_b.classReady("tests/tpl/ClassError",function(){
 		QUnit.start();
 	},function(){
 		assert.ok( true , "Class Error!" );
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		QUnit.start();
 	},function(){
 		assert.ok( true , "Fail Ready!" );
 		QUnit.start();
 	});
 
-	// var _cls = JSB.create("tests/common/Class",{"data":"hello world"});
+	// var _cls = _b.create("tests/common/Class",{"data":"hello world"});
 
-	// assert.ok( _cls.className == "tests/common/Class" , "tests/common/Class object create!" );
+	// assert.ok( _cls.getName() == "tests/common/Class" , "tests/common/Class object create!" );
 
 });

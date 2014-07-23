@@ -1,11 +1,11 @@
-JSB.addEventListener("log",function(e,message)
+_b.addEventListener("log",function(e,message)
 {
 	console.log(message);
 });
 
 QUnit.test( "Define class and init param", function( assert ) {
 
-	JSB.cls("tests/common/Class", {
+	_b.define("tests/common/Class", {
 		
 		initialize: function(options) {
 
@@ -15,9 +15,9 @@ QUnit.test( "Define class and init param", function( assert ) {
 
 	});
 
-	var _cls = JSB.create("tests/common/Class",{"data":"hello world"});
+	var _cls = _b.create("tests/common/Class",{"data":"hello world"});
 
-	assert.ok( _cls.className == "tests/common/Class" , "tests/common/Class object create!" );
+	assert.ok( _cls.getName() == "tests/common/Class" , "tests/common/Class object create!" );
 
 });
 
@@ -32,13 +32,13 @@ QUnit.test( "Undefine class Test", function( assert ) {
 			assert.ok( true , status.message );
 		}
 
-		JSB.removeEventListener("log",func);
+		_b.removeEventListener("log",func);
 
 	};
 
-	JSB.addEventListener("log",func);
+	_b.addEventListener("log",func);
 
-	assert.ok( JSB.create("tests/common/Undefine") === false , "JSB_ERROR_CREATE" );
+	assert.ok( _b.create("tests/common/Undefine") === false , "JSB_ERROR_CREATE" );
 
 });
 
@@ -54,14 +54,14 @@ QUnit.test( "Define Some Class Test", function( assert ) {
 			assert.ok( true , status.message );
 		}
 
-		JSB.removeEventListener("log",func);
+		_b.removeEventListener("log",func);
 
 	};
 
-	JSB.addEventListener("log",func);
-	// JSB.addEventListener("log",func);
+	_b.addEventListener("log",func);
+	// _b.addEventListener("log",func);
 
-	JSB.cls("tests/common/Class", {
+	_b.define("tests/common/Class", {
 
 		initialize: function(options) {
 
@@ -76,7 +76,7 @@ QUnit.test( "Singleton class", function( assert ) {
 
 	expect(2);
 
-	JSB.cls("tests/common/ClassSingleton", {
+	_b.define("tests/common/ClassSingleton", {
 		
 		single:true,
 
@@ -86,9 +86,9 @@ QUnit.test( "Singleton class", function( assert ) {
 
 	});
 
-	var _cls = JSB.create("tests/common/ClassSingleton");
+	var _cls = _b.create("tests/common/ClassSingleton");
 
-	assert.ok( _cls.className == "tests/common/ClassSingleton" , "tests/common/ClassSingleton object create!" );
+	assert.ok( _cls.getName() == "tests/common/ClassSingleton" , "tests/common/ClassSingleton object create!" );
 
 	var func = function(e,status){
 
@@ -97,19 +97,19 @@ QUnit.test( "Singleton class", function( assert ) {
 			assert.ok( true , status.message );
 		}
 
-		JSB.removeEventListener("log",func);
+		_b.removeEventListener("log",func);
 
 	};
 
-	JSB.addEventListener("log",func);
+	_b.addEventListener("log",func);
 
-	JSB.create("tests/common/ClassSingleton");
+	_b.create("tests/common/ClassSingleton");
 
 });
 
 QUnit.test( "Abstract class", function( assert ) {
 
-	JSB.cls("abstr/Class", {
+	_b.define("abstr/Class", {
 		
 		abstr:true,
 
@@ -126,19 +126,19 @@ QUnit.test( "Abstract class", function( assert ) {
 			assert.ok( true , status.message );
 		}
 
-		JSB.removeEventListener("log",func);
+		_b.removeEventListener("log",func);
 
 	};
 
-	JSB.addEventListener("log",func);
+	_b.addEventListener("log",func);
 
-	JSB.create("abstr/Class");
+	_b.create("abstr/Class");
 
 });
 
 QUnit.test( "Class method", function( assert ) {
 
-	JSB.cls("my/ClassMethod", {
+	_b.define("my/ClassMethod", {
 		
 		setData:function(data){
 			this.data = data;
@@ -154,11 +154,11 @@ QUnit.test( "Class method", function( assert ) {
 
 	});
 
-	JSB.classReady("my/ClassMethod",function(){
+	_b.classReady("my/ClassMethod",function(){
 
 		assert.ok( 1 , "my/ClassMethod classReady" );
 
-		var _cls = JSB.create("my/ClassMethod");
+		var _cls = _b.create("my/ClassMethod");
 
 		_cls.setData("hello world");
 
@@ -170,7 +170,7 @@ QUnit.test( "Class method", function( assert ) {
 
 QUnit.test( "Class Event test", function( assert ) {
 
-	JSB.cls("my/event/Node", {
+	_b.define("my/event/Node", {
 
 		callback: function() {
 
@@ -184,7 +184,7 @@ QUnit.test( "Class Event test", function( assert ) {
 
 	})
 
-	JSB.cls("my/event/Class", {
+	_b.define("my/event/Class", {
 
 		getNode: function() {
 
@@ -196,7 +196,7 @@ QUnit.test( "Class Event test", function( assert ) {
 
 			var me = this;
 
-			me._cls_node = JSB.create("my/event/Node");
+			me._cls_node = _b.create("my/event/Node");
 
 			me._cls_node.addEventListener("customEvent", me._callback);
 
@@ -212,7 +212,7 @@ QUnit.test( "Class Event test", function( assert ) {
 
 	});
 
-	var _cls = JSB.create("my/event/Class");
+	var _cls = _b.create("my/event/Class");
 
 	_cls.getNode().callback();
 
@@ -222,7 +222,7 @@ QUnit.test( "Destroy Class test", function( assert ) {
 
 	expect(2);
 
-	JSB.cls("my/event/ClassDestroy", {
+	_b.define("my/event/ClassDestroy", {
 
 		initialize: function(options) {
 
@@ -245,13 +245,13 @@ QUnit.test( "Destroy Class test", function( assert ) {
 			assert.ok( true , status.message );
 		}
 
-		JSB.removeEventListener("log",func);
+		_b.removeEventListener("log",func);
 
 	};
 
-	JSB.addEventListener("log",func);
+	_b.addEventListener("log",func);
 
-	var _cls = JSB.create("my/event/ClassDestroy");
+	var _cls = _b.create("my/event/ClassDestroy");
 
 	_cls.destroy();
 	_cls.destroy();
@@ -260,7 +260,7 @@ QUnit.test( "Destroy Class test", function( assert ) {
 
 QUnit.test( "Not Ready Class Test", function( assert ) {
 
-	JSB.cls("tests/common/ClassNotReady", {
+	_b.define("tests/common/ClassNotReady", {
 
 		imports:[
 			"qunit/tests/common/Class"
@@ -279,27 +279,27 @@ QUnit.test( "Not Ready Class Test", function( assert ) {
 			assert.ok( true , status.message );
 		}
 
-		JSB.removeEventListener("log",func);
+		_b.removeEventListener("log",func);
 
 	};
 
-	JSB.addEventListener("log",func);
+	_b.addEventListener("log",func);
 
-	var _cls = JSB.create("tests/common/ClassNotReady");
+	var _cls = _b.create("tests/common/ClassNotReady");
 
 });
 
 QUnit.test( "Class Create Trigger", function( assert ) {
 
-	JSB.addEventListener("create",function(e,cls)
+	_b.addEventListener("create",function(e,cls)
 	{
-		if(cls.className=="tests/common/ClassTrigger")
+		if(cls.getName()=="tests/common/ClassTrigger")
 		{
-			assert.ok( true , cls.className );
+			assert.ok( true , cls.getName() );
 		}
 	});
 
-	JSB.cls("tests/common/ClassTrigger", {
+	_b.define("tests/common/ClassTrigger", {
 		
 		initialize: function(options) {
 
@@ -315,13 +315,13 @@ QUnit.test( "Class Create Trigger", function( assert ) {
 			
 	// 	}
 
-	// 	JSB.removeEventListener("log",func);
+	// 	_b.removeEventListener("log",func);
 
 	// };
 
-	// JSB.addEventListener("log",func);
+	// _b.addEventListener("log",func);
 
-	var _cls = JSB.create("tests/common/ClassTrigger",{},true);
+	var _cls = _b.create("tests/common/ClassTrigger",{},true);
 
 });
 
@@ -329,9 +329,9 @@ QUnit.asyncTest( "Class Import Class Test", function( assert ) {
 
 	expect(1);
 
-	JSB.importClass("qunit/tests/common/Class",function(){
+	_b.importClass("qunit/tests/common/Class",function(){
 		// alert("XD");
-		JSB.classReady("qunit/tests/common/Class",function(){
+		_b.classReady("qunit/tests/common/Class",function(){
 			assert.ok( true , "qunit/tests/common/Class" );
 			QUnit.start();
 		},function(){
@@ -348,7 +348,7 @@ QUnit.asyncTest( "Class Import Class Routing Test", function( assert ) {
 
 	expect(1);
 
-	JSB.setConfig({
+	_b.setConfig({
 		imports: {
 			parser: {
 				"qunit/tests/common": {
@@ -362,9 +362,9 @@ QUnit.asyncTest( "Class Import Class Routing Test", function( assert ) {
 		}
 	});
 
-	JSB.importClass(["qunit/tests/common/ClassRouting","qunit/tests/common/router/Class"],function(){
+	_b.importClass(["qunit/tests/common/ClassRouting","qunit/tests/common/router/Class"],function(){
 
-		JSB.classReady("qunit/tests/common/ClassRouting",function(){
+		_b.classReady("qunit/tests/common/ClassRouting",function(){
 			assert.ok( true , "ClassRouting!" );
 			QUnit.start();
 		},function(){
@@ -381,11 +381,11 @@ QUnit.asyncTest( "Extend Core Test", function( assert ) {
 
 	expect(4);
 
-	JSB.importClass(["qunit/tests/common/ClassCore"],function(){
+	_b.importClass(["qunit/tests/common/ClassCore"],function(){
 
-		JSB.classReady("qunit/tests/common/ClassCore",function(){
+		_b.classReady("qunit/tests/common/ClassCore",function(){
 			
-			assert.ok( JSB.getImportData("qunit/tests/common/ClassCore") != false , "global.obj!" );
+			assert.ok( _b.getImportData("qunit/tests/common/ClassCore") != false , "global.obj!" );
 			
 			assert.ok( global.obj , "global.obj!" );
 
@@ -399,13 +399,13 @@ QUnit.asyncTest( "Extend Core Test", function( assert ) {
 					assert.ok( true , status.message );
 				}
 
-				JSB.removeEventListener("log",func);
+				_b.removeEventListener("log",func);
 
 			};
 
-			JSB.addEventListener("log",func);
+			_b.addEventListener("log",func);
 
-			JSB.extendCore("global.obj",JSB.cls("tests/common/ClassCore", {
+			_b.registerGlobal("global.obj",_b.define("tests/common/ClassCore", {
 				
 				initialize: function(options) {
 

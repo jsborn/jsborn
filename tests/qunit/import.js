@@ -1,4 +1,4 @@
-JSB.addEventListener("log",function(e,message)
+_b.addEventListener("log",function(e,message)
 {
 	console.log(message);
 });
@@ -7,7 +7,7 @@ QUnit.asyncTest( "Import Class Test", function( assert ) {
 
 	expect(1);
 
-	JSB.cls("tests/import/ClassParent", {
+	_b.define("tests/import/ClassParent", {
 		
 		initialize: function(options) {
 
@@ -16,7 +16,7 @@ QUnit.asyncTest( "Import Class Test", function( assert ) {
 
 	});
 
-	JSB.cls("tests/import/ClassNode", {
+	_b.define("tests/import/ClassNode", {
 		
 		imports:[
 			"tests/import/ClassParent"
@@ -29,9 +29,9 @@ QUnit.asyncTest( "Import Class Test", function( assert ) {
 
 	});
 
-	JSB.classReady("tests/import/ClassNode",function(){
+	_b.classReady("tests/import/ClassNode",function(){
 		
-		assert.ok( JSB.create("tests/import/ClassParent")!==false, "qunit/tests/import/Class" );
+		assert.ok( _b.create("tests/import/ClassParent")!==false, "qunit/tests/import/Class" );
 
 		QUnit.start();
 
@@ -43,7 +43,7 @@ QUnit.asyncTest( "Import Class async Test", function( assert ) {
 
 	expect(2);
 
-	JSB.cls("tests/import/Class", {
+	_b.define("tests/import/Class", {
 		
 		imports:[
 			"qunit/tests/import/Class",
@@ -57,11 +57,11 @@ QUnit.asyncTest( "Import Class async Test", function( assert ) {
 
 	});
 
-	JSB.classReady("tests/import/Class",function(){
+	_b.classReady("tests/import/Class",function(){
 
-		assert.ok( JSB.create("qunit/tests/import/Class")!==false, "qunit/tests/import/Class" );
+		assert.ok( _b.create("qunit/tests/import/Class")!==false, "qunit/tests/import/Class" );
 
-		assert.ok( JSB.create("qunit/tests/import/ClassNode")!==false, "qunit/tests/import/ClassNode" );
+		assert.ok( _b.create("qunit/tests/import/ClassNode")!==false, "qunit/tests/import/ClassNode" );
 
 		QUnit.start();
 
@@ -73,7 +73,7 @@ QUnit.asyncTest( "Import Class Depth Test", function( assert ) {
 	
 	expect(4);
 
-	JSB.cls("tests/import/ClassMulti", {
+	_b.define("tests/import/ClassMulti", {
 		
 		imports:[
 			"qunit/tests/import/ClassNode",
@@ -85,23 +85,23 @@ QUnit.asyncTest( "Import Class Depth Test", function( assert ) {
 
 	});
 
-	JSB.classReady("qunit/tests/import/ClassParent",function(){
+	_b.classReady("qunit/tests/import/ClassParent",function(){
 		
-		assert.ok( JSB.create("qunit/tests/import/ClassParent")!==false, "qunit/tests/import/ClassParent" );
+		assert.ok( _b.create("qunit/tests/import/ClassParent")!==false, "qunit/tests/import/ClassParent" );
 
 	});
 
 	// console.log("1");
-	JSB.classReady("tests/import/ClassMulti",function(){
+	_b.classReady("tests/import/ClassMulti",function(){
 
-		assert.ok( JSB.create("qunit/tests/import/ClassNode")!==false, "qunit/tests/import/ClassNode" );
+		assert.ok( _b.create("qunit/tests/import/ClassNode")!==false, "qunit/tests/import/ClassNode" );
 
 		assert.ok( true, "tests/import/ClassMulti Ready" );
 
 	},function(){
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		assert.ok( true, "All Class Ready" );
 		QUnit.start();
 	},function(){
@@ -114,7 +114,7 @@ QUnit.asyncTest( "Import Class Infinite Import Test", function( assert ) {
 	
 	expect(1);
 
-	JSB.cls("tests/import/ClassInfinite", {
+	_b.define("tests/import/ClassInfinite", {
 		
 		imports:[
 			"qunit/tests/import/ClassNode",
@@ -127,8 +127,8 @@ QUnit.asyncTest( "Import Class Infinite Import Test", function( assert ) {
 
 	});
 
-	JSB.ready(function(){
-		assert.ok( JSB.create("tests/import/ClassInfinite")!==false, "all class ready" );
+	_b.ready(function(){
+		assert.ok( _b.create("tests/import/ClassInfinite")!==false, "all class ready" );
 		QUnit.start();
 	},function(){
 		console.log("fail");
@@ -141,7 +141,7 @@ QUnit.asyncTest( "Import Class Test Error Require", function( assert ) {
 	
 	expect(2);
 
-	JSB.cls("tests/import/ClassFail", {
+	_b.define("tests/import/ClassFail", {
 		
 		imports:[
 			"qunit/tests/import/ClassFail",
@@ -154,14 +154,14 @@ QUnit.asyncTest( "Import Class Test Error Require", function( assert ) {
 
 	});
 	// console.log("1");
-	JSB.classReady("tests/import/ClassFail",function(){
+	_b.classReady("tests/import/ClassFail",function(){
 
 
 	},function(){
 		assert.ok( true, "video has loaded and is ready to play" );
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		QUnit.start();
 	},function(){
 		assert.ok( true, "video has loaded and is ready to play" );
@@ -174,7 +174,7 @@ QUnit.asyncTest( "Import Class Test Error Again Require", function( assert ) {
 	
 	expect(1);
 
-	JSB.cls("tests/import/ClassFailAgain", {
+	_b.define("tests/import/ClassFailAgain", {
 		
 		imports:[
 			"qunit/tests/import/ClassFail",
@@ -187,7 +187,7 @@ QUnit.asyncTest( "Import Class Test Error Again Require", function( assert ) {
 
 	});
 
-	JSB.ready(function(){
+	_b.ready(function(){
 		QUnit.start();
 	},function(){
 		assert.ok( true, "video has loaded and is ready to play" );

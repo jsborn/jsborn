@@ -1,4 +1,4 @@
-JSB.extendCore("global.obj",JSB.cls("qunit/tests/common/ClassCore", {
+_b.registerGlobal("global.obj",_b.define("qunit/tests/common/ClassCore", {
 	
 	hello:function(){
 

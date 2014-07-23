@@ -1,4 +1,4 @@
-JSB.cls("qunit/tests/import/ClassParent", {
+_b.define("qunit/tests/import/ClassParent", {
 
 	imports:[
 		"qunit/tests/import/Class",

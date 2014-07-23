@@ -16,19 +16,28 @@
 
 (function(window) {
 
-	var _q = jQuery;
+	var _a_j_v = $.fn.jquery.split('.');
 
-	var _q_v = _q.fn.jquery.split('.');
+	var _i_j_v = parseInt(_a_j_v[0],10);
 
-	var _s_e_o = (_q_v[0]==1&&_q_v[1]<7)?"bind":"on";
+	var _s_e_o = (_i_j_v===1&&_a_j_v[1]<7)?"bind":"on";
 
-	var _s_e_f = (_q_v[0]==1&&_q_v[1]<7)?"unbind":"off";
+	var _s_e_f = (_i_j_v===1&&_a_j_v[1]<7)?"unbind":"off";
 
-	var JSB = {
+	var _b = {
 
 		version: '0.5.3',
 
 		status: 'ready',
+
+		errors: [
+			"JSB_ERROR_CLASS_DEFINE",
+			"JSB_ERROR_CLASS_DESTROY",
+			"JSB_ERROR_CLASS_IMPORT",
+			"JSB_ERROR_CREATE",
+			"JSB_ERROR_EXTEND_CORE",
+			"JSB_ERROR_EXTEND_PLUGIN"
+		],
 
 		event: {
 			on: _s_e_o,
@@ -44,7 +53,6 @@
 		},
 
 		config: {
-			console: false,
 			imports: {
 				cache: false,
 				path: '',
@@ -60,11 +68,11 @@
 		 * @param {Function} cb    call back function
 		 * @param {Misc}     scope function scope
 		 */
-		addEventListener: function(str_event, func_cb, misc_scope) {
+		addEventListener: function(event, func, scope) {
 
-			_q(_j)[_j.event.on]('jsb.' + str_event, {
-				scope: misc_scope
-			}, func_cb);
+			$(_b)[_b.event.on]('jsb.' + event, {
+				scope: scope
+			}, func);
 
 			return this;
 
@@ -76,13 +84,13 @@
 		 * @param  {Function} cb   call back function
 		 * @return {boolean}
 		 */
-		classReady:function(str_name,func_cb,func_err){
+		classReady:function(clsName,funcSuccess,funcError) {
 
 			var _obj_status = false;
-
-			var _bol_check = true;
-
-			var _obj_cls =  _j._get_cls(str_name);
+			
+			var _bol_check  = true;
+			
+			var _obj_cls    =  _b._get_cls(clsName);
 
 			if(_obj_cls){
 
@@ -113,10 +121,10 @@
 					_bol_check = false;
 				}
 				// console.log("_obj_cls.fileRequire",_obj_cls.fileRequire);
-				if(_obj_cls.fileRequire<=0&&_bol_check==false)
+				if(_obj_cls.fileRequire<=0&&_bol_check===false)
 				{
-					if(func_err){
-						func_err.call();
+					if(funcError){
+						funcError.call();
 						return false;
 					}	
 				}
@@ -125,11 +133,11 @@
 				_bol_check = false;
 			}
 
-			if(func_cb){
+			if(funcSuccess){
 				if(_bol_check){
-					func_cb.call();
+					funcSuccess.call();
 				}else{
-					_j.ready(func_cb,func_err,str_name);	
+					_b._ready(funcSuccess,funcError,clsName);	
 				}
 				return true;
 			}
@@ -138,25 +146,67 @@
 
 		},
 
-		cls:function(str_name, obj_cls) {
+		create: function(clsName, options, trigger) {
 
-			if (_j._get_cls(str_name)) {
+			var _ns_cls = _b._get_cls(clsName);
 
-				_j.echo("warn", "JSB_ERROR_CLASS_DEFINE", "CLASS:'" + str_name + "' define again");
+			if(!_ns_cls){
+				_b._log("error", _b.errors[3], "CLASS:"+clsName+" NOT FIND");
+				return false;
+			}
+
+			if(!_b.classReady(clsName)){
+				_b._log("error", _b.errors[3], "CLASS:"+clsName+" NOT READY");
+				return false;
+			}
+
+			if (_ns_cls.config.abstr) {
+				_b._log("error", _b.errors[3], "CLASS:"+clsName+" IS DEFINE AN ABSTR CLASS");
+				return false;
+			}
+
+			if (!_ns_cls.config.nodes) {
+				_ns_cls.config.nodes = [];
+			}
+
+			if (_ns_cls.config.single && _ns_cls.config.nodes.length > 0) {
+				_b._log("error", _b.errors[3], "CLASS:"+clsName+" SINGLE");
+				return false;
+			}
+
+			var _ns = new _ns_cls["cls"](options);
+
+			_ns_cls.config.nodes.push(_ns);
+
+			if (trigger) {
+				$(_b).triggerHandler('jsb.create', _ns);
+			}
+
+			return _ns;
+
+		},
+
+		define:function(clsName, cls) {
+
+			var i;
+
+			if (_b._get_cls(clsName)) {
+
+				_b._log("warn", _b.errors[0], "CLASS:'" + clsName + "' define again");
 
 				return false;
 
 			}
 
-			JSB.status = "progress";
+			_b.status = "progress";
 
 			var _jsb_cls = function(misc_opt) {
 
-				obj_cls.plugins = obj_cls.plugins ? obj_cls.plugins : [];
+				cls.plugins = cls.plugins ? cls.plugins : [];
 
-				this.className = str_name;
+				this.__classname = clsName;
 
-				this.__plugins = _q.extend([],this.plugins,obj_cls.plugins);
+				this.__plugins = $.extend([],this.plugins,cls.plugins);
 
 				this.__extend = [];
 
@@ -178,202 +228,196 @@
 
 			};
 
-			_j.data.clss[str_name] = {
+			_b.data.clss[clsName] = {
 				cls: _jsb_cls,
 				config: {
-					name: str_name,
-					single: obj_cls.single ? true : false,
-					abstr: obj_cls.abstr ? true : false
+					name: clsName,
+					single: cls.single ? true : false,
+					abstr: cls.abstr ? true : false
 				},
 				ready:false,
 				fileRequire:0,
 				fileLoad:0,
-				extend:obj_cls.extend?obj_cls.extend:false,
-				plugins:obj_cls.plugins?obj_cls.plugins.slice():[],
+				extend:cls.extend?cls.extend:false,
+				plugins:cls.plugins?cls.plugins.slice():[],
 				status:{
-					extend:obj_cls.extend?[obj_cls.extend]:true,
-					plugins:obj_cls.plugins?obj_cls.plugins.slice():true,
-					css:obj_cls.css?obj_cls.css.slice():true,
-					tpl:obj_cls.tpl?obj_cls.tpl.slice():true,
-					imports:obj_cls.imports?obj_cls.imports.slice():true
+					extend:cls.extend?[cls.extend]:true,
+					plugins:cls.plugins?cls.plugins.slice():true,
+					css:cls.css?cls.css.slice():true,
+					tpl:cls.tpl?cls.tpl.slice():true,
+					imports:cls.imports?cls.imports.slice():true
 				}
 			};
 			//開始計算要預期要載入的檔案
-			_j._file_require_count(str_name);
+			_b._file_require_count(clsName);
 			//繼承JSB預設的Class 和 Class 的 PROTOTYPE
-			_q.extend(_jsb_cls.prototype, _j.cls.prototype, obj_cls);
+			$.extend(_jsb_cls.prototype, _b.define.prototype, cls);
 			//如果是被async載入，則檢查是否已經準備完畢
-			if(JSB.getImportData()[str_name])
+			if(_b.getImportData()[clsName])
 			{
-				_j._check_cls_status(str_name);
-			}
-			// console.log("qunit/tests/Parent",str_name,JSB.getImportData()["qunit/tests/Parent"]);
-
-			if (obj_cls.imports) {
-
-				for (var i = 0; i < obj_cls.imports.length; i++) {
-
-					_j._parser_imports(str_name,obj_cls.imports[i]);
-
-				};
-
+				_b._cls_status_dispatch(clsName);
 			}
 
-			if (obj_cls.extend) {
+			if (cls.imports) {
 
-				if(!_j._check_cls_infite("extend",obj_cls.extend,str_name)){
+				for (i = 0; i < cls.imports.length; i++) {
 
-					_j.echo("error",str_name, "Extend: infinite loop.");
+					_b._parser_imports(clsName,cls.imports[i]);
 
-					_j._set_cls_status(str_name,'fail', obj_cls.extend);
-
-				}else{
-					_j._parser_extend(_jsb_cls,obj_cls,str_name,obj_cls.extend);	
 				}
 
 			}
 
-			if (obj_cls.plugins) {
+			if (cls.extend) {
 
-				for (var i = 0; i < obj_cls.plugins.length; i++) {
+				if(!_b._cls_infinite("extend",cls.extend,clsName)){
+
+					_b._log("error",clsName, "Extend: infinite loop.");
+
+					_b._cls_status_set(clsName,'fail', cls.extend);
+
+				}else{
+					_b._parser_extend(_jsb_cls,cls,clsName,cls.extend);	
+				}
+
+			}
+
+			if (cls.plugins) {
+
+				for (i = 0; i < cls.plugins.length; i++) {
 					
-					var _plug = obj_cls.plugins[i];
+					var _plug = cls.plugins[i];
 
-					if(!_j._check_cls_infite("plugins",_plug,str_name)){
+					if(!_b._cls_infinite("plugins",_plug,clsName)){
 
-						_j.echo("error",str_name, "PLUGIN: infinite loop.");
+						_b._log("error",clsName, "PLUGIN: infinite loop.");
 
-						_j._set_cls_status(str_name,'fail', _plug);
+						_b._cls_status_set(clsName,'fail', _plug);
 						
 					}else{
-						_j._parser_plugin(str_name,_plug);
+						_b._parser_plugin(clsName,_plug);
 					}
 
-				};
+				}
 
 			}
 
-			if (obj_cls.tpl) {
+			if (cls.tpl) {
 
-				for (var i = 0; i < obj_cls.tpl.length; i++) {
+				for (i = 0; i < cls.tpl.length; i++) {
 
-					_j._parser_tpl(str_name,obj_cls.tpl[i]);
+					_b._parser_tpl(clsName,cls.tpl[i]);
 
-				};
+				}
 
 			}
 
-			if (obj_cls.css) {
+			if (cls.css) {
 
-				for (var i = 0; i < obj_cls.css.length; i++) {
+				for (i = 0; i < cls.css.length; i++) {
 
-					_j._parser_css(str_name,obj_cls.css[i]);
+					_b._parser_css(clsName,cls.css[i]);
 
-				};
+				}
 
 			}
 
 			setTimeout(function() {
 
-				_j._check_cls_status(str_name);
+				_b._cls_status_dispatch(clsName);
 
 			}, 1);
 			
-			return _j.data.clss[str_name];
+			return _b._get_cls(clsName);
 
 		},
 
-		create: function(str_name, misc_opt, bol_trigger) {
+		dispatchEvent: function(event, data) {
 
-			var me = this;
-
-			var _ns_cls = me._get_cls(str_name);
-
-			if(!_ns_cls){
-				me.echo("error", "JSB_ERROR_CREATE", "CLASS:"+str_name+" NOT FIND");
-				return false;
-			}
-
-			if(!_j.classReady(str_name)){
-				me.echo("error", "JSB_ERROR_CREATE", "CLASS:"+str_name+" NOT READY");
-				return false;
-			}
-
-			if (_ns_cls.config.abstr) {
-				me.echo("error", "JSB_ERROR_CREATE", "CLASS:"+str_name+" ABSTR");
-				return false;
-			}
-
-			if (!_ns_cls.config.nodes) {
-				_ns_cls.config.nodes = [];
-			}
-
-			if (_ns_cls.config.single && _ns_cls.config.nodes.length > 0) {
-				me.echo("error", "JSB_ERROR_CREATE", "CLASS:"+str_name+" SINGLE");
-				return false;
-			}
-
-			var _ns = new _ns_cls["cls"](misc_opt);
-
-			_ns_cls.config.nodes.push(_ns);
-
-			if (bol_trigger) {
-				_q(me).triggerHandler('jsb.create', _ns);
-			}
-
-
-			return _ns
+			$(_b).triggerHandler('jsb.' + event, [data]);
 
 		},
 
-		dispatchEvent: function(str_event, misc_data) {
+		getClassData: function(clsName) {
 
-			_q(_j).triggerHandler('jsb.' + str_event, [misc_data]);
+			if(clsName)
+			{
+				return _b._get_cls(clsName);				
+			}
 
-		},
-
-		echo: function(type,message,detail) {
-
-			// if(_j.config.debug){
-
-				// throw new Object({type:type,message:message,detail:detail});
-
-
-			// }
-			
-			_j.dispatchEvent("log",{type:type,message:message,detail:detail});
-
-			// if (console && _j.config.console) {
-
-			// 	if (console[type]) {
-
-			// 		console[type](arguments);
-
-			// 	} else {
-
-			// 		_j.echo("log", "console no " + type + " method.");
-
-			// 	}
-
-			// }
+			return _b.data.clss;
 
 		},
 
-		extendCore: function(str_ns, cls) {
+		getImportData: function(clsName) {
 
-			var _ary_ns = str_ns.split('.');
+			if(clsName){
+				return _b.data.imports[clsName];
+			}
+
+			return _b.data.imports;
+
+		},
+		//*
+		importClass: function(imports,funcSuccess,funcError) {
+
+			var _str_url = '';
+
+			var _ary_import = $.isArray(imports)?imports:[imports]; 
+
+			var _ary_xhr = [];
+
+			for (var i = 0; i < _ary_import.length; i++) {
+				
+				if(_b.data.imports[_ary_import[i]]){
+					continue;
+				}
+
+				_ary_xhr.push(_b._xhr(_ary_import[i]));
+
+			}
+
+			if(_ary_xhr.length>0){
+				$.when.apply( $, _ary_xhr ).then(function(){
+					if($.isFunction(funcSuccess)){
+						funcSuccess.call();
+					}
+				},function(){
+
+					if($.isFunction(funcError)){
+						funcError.call();
+					}
+					// console.log("data");
+				});	
+			}else{
+				if($.isFunction(funcSuccess)){
+					funcSuccess.call();
+				}
+			}
+
+		},
+		//*
+		ready:function(funcSuccess,funcError) {
+
+			_b._ready(funcSuccess,funcError,"ready");
+
+		},
+
+		registerGlobal: function(ns, cls) {
+
+			var _ary_ns = ns.split('.');
 
 			var _str_name = cls.config.name;
 
-			if (_j._get_core(str_ns)) {
+			if (_b.data.cores[ns]) {
 
-				_j.echo("log", "JSB_ERROR_EXTEND_CORE", "Core: " + str_ns + " already register.");
+				_b._log("log", _b.errors[4], "Core: " + ns + " already register.");
 
 				return false;
 
 			}
 
-			cls["config"] = _q.extend(cls["config"], {
+			cls["config"] = $.extend(cls["config"], {
 				single: true,
 				abstr: false
 			});
@@ -382,181 +426,77 @@
 
 				var obj = obj ? obj : window;
 
-				if (i != _ary_ns.length - 1) {
+				if (i < _ary_ns.length - 1) {
 
-					if (_q.isEmptyObject(obj[_ary_ns[i]])) {
-						obj[_ary_ns[i]] = new Object();
+					if ($.isEmptyObject(obj[_ary_ns[i]])) {
+						obj[_ary_ns[i]] = {};
 					}
 
 					obj = obj[_ary_ns[i]];
 
 				} else {
 
-					obj[_ary_ns[i]] = _j.create(_str_name,{},false);
+					obj[_ary_ns[i]] = _b.create(_str_name,{},false);
 
-					_j.data.cores[str_ns] = obj[_ary_ns[i]];
+					_b.data.cores[ns] = obj[_ary_ns[i]];
 
 					return obj[_ary_ns[i]];
 
 				}
 
-			};
+			}
 
 		},
 
-		extendPlugin: function(str_ns, cls) {
-
-			var me = this;
+		registerPlugin: function(ns, cls) {
 
 			var _str_name = cls.config.name;
 
-			var _obj_plug = me.data.plugins;
+			var _obj_plug = _b.data.plugins;
 
 			for(var key in _obj_plug)
 			{
-				if(_obj_plug[key]["name"]==str_ns)
+				if(_obj_plug[key]["name"]===ns)
 				{
-					me.echo("error", "JSB_ERROR_EXTEND_PLUGIN", "[Plugin] Name Space: '" + str_ns + "' define again.");
+					_b._log("error", _b.errors[5], "[Plugin] Name Space: '" + ns + "' define again.");
 					return false;
 				}
 			}
 
-			if (me._get_plugin(_str_name)) {
+			if (_b._get_plugin(_str_name)) {
 
-				me.echo("warn", "JSB_ERROR_EXTEND_PLUGIN", "Plugin: " + cls + " already register.");
+				_b._log("warn", _b.errors[5], "Plugin: " + cls + " already register.");
 
-				return me._get_plugin(_str_name);
+				return _b._get_plugin(_str_name);
 
 			}
 
-			me.data.plugins[_str_name] = {
-				name: str_ns,
+			_b.data.plugins[_str_name] = {
+				name: ns,
 				cls: cls["cls"]
 			};
 
-			return me.data.plugins[_str_name];
+			return _b.data.plugins[_str_name];
 
 		},
 
-		getClassData: function(name) {
+		removeEventListener: function(event,func) {
 
-			if(name)
-			{
-				return _j.data.clss[name];				
-			}
-
-			return _j.data.clss;
+			$(_b)[_b.event.off]('jsb.' + event,func);
 
 		},
 
-		getImportData: function(name) {
+		setConfig: function(config) {
 
-			if(name){
-				return _j.data.imports[name];
-			}
+			_b.config = $.extend(true, _b.config, config);
 
-			return _j.data.imports;
-
-		},
-		//*
-		importClass: function(misc_imports,func_cb,func_err) {
-
-			var _str_url = '';
-
-			var _ary_import = _q.isArray(misc_imports)?misc_imports:[misc_imports]; 
-
-			var _ary_xhr = [];
-
-			for (var i = 0; i < _ary_import.length; i++) {
-				
-				if(_j.data.imports[_ary_import[i]]){
-					continue;
-				}
-
-				_ary_xhr.push(_j._xhr(_ary_import[i]));
-
-			};
-
-			if(_ary_xhr.length>0){
-				_q.when.apply( _q, _ary_xhr ).then(function(){
-					if(_q.isFunction(func_cb)){
-						func_cb.call();
-					}
-				},function(){
-
-					if(_q.isFunction(func_err)){
-						func_err.call();
-					}
-					// console.log("data");
-				});	
-			}else{
-				if(_q.isFunction(func_cb)){
-					func_cb.call();
-				}
-			}
+			return _b.config;
 
 		},
 
-		removeEventListener: function(str_event,func_cb) {
+		_cls_infinite:function(type,extend,clsName) {
 
-			_q(_j)[_j.event.off]('jsb.' + str_event,func_cb);
-
-		},
-		//*
-		ready:function(func_cb,func_err,str_event){
-
-			str_event = str_event?str_event:'ready';
-
-			if(str_event=="ready"&&JSB.status=="complete"){
-				func_cb.call();
-				return true;
-			}
-
-			var _func = function(){
-
-				_j.removeEventListener(str_event,_func);
-
-				_j.removeEventListener(str_event+"::ERROR",_err_func);
-
-				if(_q.isFunction(func_cb))
-				{
-					func_cb.call();
-				}
-				
-			}
-
-			var _err_func = function(){
-
-				_j.removeEventListener(str_event,_func);
-
-				_j.removeEventListener(str_event+"::ERROR",_err_func);
-				
-				if(_q.isFunction(func_err))
-				{
-					func_err.call();
-				}
-				
-			}
-
-			_j.addEventListener(str_event,_func);
-			// console.log(str_event+"::ERROR");
-			_j.addEventListener(str_event+"::ERROR",_err_func);
-
-		},
-
-		setConfig: function(obj) {
-
-			var me = this;
-
-			me.config = _q.extend(true, me.config, obj);
-
-			return me.config;
-
-		},
-
-		_check_cls_infite:function(type,extend,name){
-
-			var _obj = _j.data.clss[extend];
+			var _obj = _b._get_cls(extend);
 
 			if(!_obj){
 				return true;
@@ -564,23 +504,23 @@
 				
 				if(_obj[type]){
 
-					var _ary_check = _q.isArray(_obj[type])?_obj[type]:[_obj[type]];
+					var _ary_check = $.isArray(_obj[type])?_obj[type]:[_obj[type]];
 
 					for (var i = 0; i < _ary_check.length; i++) {
 
-						if(_ary_check[i]==name){
+						if(_ary_check[i]===clsName){
 
 							return false;
 
 						}else{
 
-							if(!_j._check_cls_infite(type,_ary_check[i],name))
+							if(!_b._cls_infinite(type,_ary_check[i],clsName))
 							{	
 								return false;
 							}
 
 						}
-					};
+					}
 					
 				}
 
@@ -590,222 +530,33 @@
 
 		},
 
-		// _check_cls_infite_plugin:function(plug,name){
+		_cls_is_last:function(clsName) {
 
-		// 	var _obj = _j.data.clss[plug];
-
-		// 	if(!_obj){
-
-		// 		return true;
-
-		// 	}else{
-
-		// 		for (var i = 0; i < _obj.plugins.length; i++) {
-
-		// 			if(_obj.plugins[i]==name){
-
-		// 				return false;
-
-		// 			}else{
-
-		// 				if(!_j._check_cls_infite_plugin(_obj.plugins[i],name))
-		// 				{	
-		// 					return false;
-		// 				}
-
-		// 			}
-		// 		};
-
-		// 	}
-			
-		// 	return true;			
-
-		// },
-		/*
-		_check_cls: function(str_cls,func_cb) {
-
-			var me = this;
-
-			if (!me._get_cls(str_cls)) {
-
-				me.importClass(str_cls,func_cb);
-
-				return false;
-
-			}
-
-			return true;
-
-		},*/
-		//*
-		_check_cls_status:function(str_name){
-
-			if(_j.classReady(str_name)){
-				// console.log("classReady:",str_name);
-				_j._get_cls(str_name)["ready"] = true;
-				// console.log("dispatchEvent:",str_name);
-				_j.dispatchEvent(str_name,str_name);
-
-			}else{
-
-				var _int_file = _j._get_cls(str_name)["fileRequire"];
-				// console.log("_check",str_name,_int_file);
-				var obj = JSON.stringify(_j.data.clss);
-
-				var obj2 = JSON.stringify(_j.data.imports);
-				// console.log(jQuery.parseJSON(obj));
-				// console.log(jQuery.parseJSON(obj2));
-				// console.log(_j.data.loads);
-				if(_int_file==0)
-				{
-					console.log("classError:",str_name);
-					_j.dispatchEvent(str_name+"::ERROR");
-				}else{
-
-					_j._check_cls_repeat(str_name);
-
-				}
-
-			}
-
-			var _bol_check = true;
-
-			_q.each(_j.getClassData(), function(i, e) {
-				
-				if(!_j.classReady(i)&&!e.ready){
-					// console.log(JSON.stringify(e));
-					_bol_check = false;
-				}					
-							
-			});
-
-			if(_bol_check){
-
-				JSB.status = 'complete';
-				_j.dispatchEvent('ready');
-
-			}else{
-				
-				if(_j._file_all_load())
-				{
-					JSB.status = 'fail';
-					_j.dispatchEvent('ready::ERROR');
-				}
-
-			}
-
-			
-			// _q.each(_j.getClassData(), function(i, e) {
-								
-			// 	if(!e.ready||e.fileRequire==0){
-			// 		_bol_check = false;
-			// 	}					
-							
-			// });
-
-		},
-
-		_check_cls_repeat:function(str_name){
-
-			//如果該Class有被載入
-			// console.log(_j._check_last_cls(str_name),str_name);
-			if(_j._check_last_cls(str_name))
+			if(_b.data.imports[clsName])
 			{
 
-				var _obj_status = _j.data.clss[str_name]["status"];
-
-				if(_obj_status.imports!==true)
-				{
-					
-					for (var i = 0; i < _obj_status.imports.length; i++) {
-						
-						var name = _obj_status.imports[i];
-						var imports = _j.data.imports[name];
-						if(imports&&imports["status"]=="success"){
-							// console.log("!!!!YES",str_name);
-							_j._update_cls_status(str_name,"imports",name);
-							_j._file_require_decrease(str_name);
-							// _j._get_cls(str_name)["fileRequire"]--;
-							_j._check_cls_status(str_name);
-						}
-					};
-
-				}
-
-				if(_obj_status.plugins!==true)
-				{
-					
-					for (var i = 0; i < _obj_status.plugins.length; i++) {
-						
-						var name = _obj_status.plugins[i];
-						var imports = _j.data.imports[name];
-						if(imports&&imports["status"]=="success"){
-							// console.log("!!!!YES",str_name);
-							_j._update_cls_status(str_name,"plugins",name);
-							_j._file_require_decrease(str_name);
-							// _j._get_cls(str_name)["fileRequire"]--;
-							_j._check_cls_status(str_name);
-						}
-					};
-
-				}
-
-				if(_obj_status.extend!==true)
-				{
-					
-					for (var i = 0; i < _obj_status.extend.length; i++) {	
-
-						var name = _obj_status.extend[i];
-
-						var imports = _j.data.imports[name];
-
-						if(imports&&imports["status"]=="success"){
-							// console.log("!!!!YES",str_name);
-							_j._update_cls_status(str_name,"extend",name);
-							_j._file_require_decrease(str_name);
-							// _j._get_cls(str_name)["fileRequire"]--;
-							_j._check_cls_status(str_name);
-						}
-
-					}
-
-				}
-
-
-				// console.log("data");
-
-
-			}
-
-		},
-
-		_check_last_cls:function(str_name){
-
-			if(_j.data.imports[str_name])
-			{
-
-				var _ary_load = _j.data.loads;
+				var _ary_load = _b.data.loads;
 
 				for (var i = _ary_load.length-1; i >= 0; i--) {
 					
 					var name = _ary_load[i];
 
-					if(name==str_name){
+					if(name===clsName){
 
 						return true;
 
 					}else{
 
-						var _obj_import = _j.data.imports[name];
+						var _obj_import = _b.data.imports[name];
 
-						if(_obj_import["status"]!="success")
+						if(_obj_import["status"]!=="success")
 						{
 							return false;
 						}
 
 					}
 
-				};
+				}
 
 			}
 
@@ -813,12 +564,151 @@
 
 		},
 
+		_cls_status_check:function(clsName,type) {
+
+			var name,imports;
+
+			var _obj_status = _b._get_cls(clsName)["status"][type];
+
+			if(_obj_status!==true)
+			{
+				
+				for (i = 0; i < _obj_status.length; i++) {
+					
+					name = _obj_status[i];
+
+					imports = _b.data.imports[name];
+
+					if(imports&&imports["status"]==="success"){
+						// console.log("!!!!YES",clsName);
+						_b._cls_status_update(clsName,type,name);
+
+						_b._file_require_decrease(clsName);
+						// _b._get_cls(clsName)["fileRequire"]--;
+						_b._cls_status_dispatch(clsName);
+					}
+				}
+
+			}
+
+		},
+
+		//*
+		_cls_status_dispatch:function(clsName) {
+
+			var _bol_check = true;
+
+			if(_b.classReady(clsName)){
+
+				_b._get_cls(clsName)["ready"] = true;
+
+				_b.dispatchEvent(clsName,clsName);
+
+			}else{
+
+				var _int_file = _b._get_cls(clsName)["fileRequire"];
+
+				if(_int_file===0){
+					
+					_b.dispatchEvent(clsName+"::Error");
+
+				}else{
+
+					if(_b._cls_is_last(clsName))
+					{
+
+						_b._cls_status_check(clsName,"imports");
+
+						_b._cls_status_check(clsName,"plugins");
+
+						_b._cls_status_check(clsName,"extend");
+
+
+					}
+
+				}
+
+			}
+
+			$.each(_b.getClassData(), function(i, e) {
+				
+				if(!_b.classReady(i)&&!e.ready){
+
+					_bol_check = false;
+
+				}					
+							
+			});
+
+			if(_bol_check){
+
+				_b.status = 'complete';
+
+				_b.dispatchEvent('ready');
+
+			}else{
+				
+				if(_b._file_all_load()){
+
+					_b.status = 'fail';
+
+					_b.dispatchEvent('ready::Error');
+
+				}
+
+			}
+
+		},
+		
+		//*
+		_cls_status_set:function(clsName,type,value) {
+
+			if(type!=="fail"){
+
+				_b._cls_status_update(clsName,type,value);
+
+			}else{
+
+				_b.dispatchEvent(value+"::Error");
+
+			}
+			// console.log("type",type,clsName,value);
+			_b._file_require_decrease(clsName);
+			// _b._get_cls(clsName)["fileRequire"]--;
+			_b._cls_status_dispatch(clsName);
+
+		},
+
+		_cls_status_update:function(clsName,type,value) {
+
+			var _ary = _b._get_cls(clsName)["status"][type];
+
+			for (var i = 0; i < _ary.length; i++) {
+
+				if(_ary[i]===value){
+					_ary.splice(i,1);
+					break;
+				}
+
+			}
+
+			if(_ary.length>0){
+
+				_b._get_cls(clsName)["status"][type] = _ary;
+
+			}else{
+
+				_b._get_cls(clsName)["status"][type] = true;
+				
+			}
+
+		},
 		//檢查所有class的需要依賴的檔案是否已經全部嘗試載入
 		_file_all_load:function(){
 
 			var _bol_check = true;
 
-			_q.each(_j.getClassData(), function(i, e) {
+			$.each(_b.getClassData(), function(i, e) {
 								
 				if(e.fileRequire > 0){
 					_bol_check = false;
@@ -829,19 +719,16 @@
 			return _bol_check;
 
 		},
-
 		//需要引用的檔案數
-		_file_require_count:function(name){
-
-			var me = this;
+		_file_require_count:function(name) {
 
 			var _int_count = 0;
 
-			var obj = me.data.clss[name];
+			var obj = _b._get_cls(name);
 
 			for(var key in obj["status"]){
 				
-				if(_q.isArray(obj["status"][key])){
+				if($.isArray(obj["status"][key])){
 					_int_count += obj["status"][key]["length"];
 				}
 
@@ -851,24 +738,19 @@
 
 		},
 
-		_file_require_decrease:function(name)
-		{
+		_file_require_decrease:function(name) {
 
-			var me = this;
-
-			var obj = me.data.clss[name];
+			var obj = _b._get_cls(name);
 
 			obj["fileRequire"]--;
 
 		},
 
-		_get_core: function(str_name) {
+		_get_cls: function(clsName) {
 
-			var me = this;
+			if (_b.data.clss[clsName]) {
 
-			if (me.data.cores[str_name]) {
-
-				return me.data.cores[str_name];
+				return _b.data.clss[clsName];
 
 			} else {
 
@@ -878,13 +760,11 @@
 
 		},
 
-		_get_cls: function(str_name) {
+		_get_plugin: function(clsName) {
 
-			var me = this;
+			if (_b.data.plugins[clsName]) {
 
-			if (me.data.clss[str_name]) {
-
-				return me.data.clss[str_name];
+				return _b.data.plugins[clsName];
 
 			} else {
 
@@ -893,55 +773,37 @@
 			}
 
 		},
-
-		_get_plugin: function(str_name) {
-
-			var me = this;
-
-			if (me.data.plugins[str_name]) {
-
-				return me.data.plugins[str_name];
-
-			} else {
-
-				return false;
-
-			}
-
-		},
-		
 		//*
-		_init_cls:function(){
+		_init_cls:function() {
 
-			_j.cls.prototype = {
+			_b.define.prototype = {
 
 				_plugin: function() {
 
 					var _ary_plugin = [];
 
-					_q.each(this.__plugins, function(i, e) {
+					$.each(this.__plugins, function(i, e) {
 						//filter same name plugin
-						if (_q.inArray(e, _ary_plugin) == -1 && _j.className != e) {
+						if ($.inArray(e, _ary_plugin) === -1 && _b.__classname !== e) {
 							_ary_plugin.push(e);
 						}
+
 					});
 
-					if (_q.isArray(_ary_plugin)) {
+					if ($.isArray(_ary_plugin)) {
 
 						for (var i = 0; i < _ary_plugin.length; i++) {
 
-							// _j._check_cls(_ary_plugin[i]);
+							var _obj_plug = _b._get_plugin(_ary_plugin[i]);
 
-							var _obj_plug = _j._get_plugin(_ary_plugin[i]);
+							this[_obj_plug.name] = _b.create(_ary_plugin[i], this,false);
 
-							this[_obj_plug.name] = _j.create(_ary_plugin[i], this,false);
-
-						};
+						}
 
 					}
 
 				},
-				//TODO:優化message
+
 				_extend: function(misc_scope) {
 
 					var me = this;
@@ -952,21 +814,11 @@
 
 						this.__extend.push(misc_scope.extend);
 
-						var _ns_cls = _j._get_cls(_str_extend)["cls"];
+						var _ns_cls = _b._get_cls(_str_extend)["cls"];
 
 						if (_ns_cls.prototype) {
 
-							// try{
-								this._extend(_ns_cls.prototype);
-							// }catch(e){
-
-									// _j.echo("error",_str_extend, "Extend: infinite loop.");
-								// console.log("XDDDD");
-								// console.log(e.message);
-								
-								// _j.echo("error", this, "already destroy");
-							// }
-							
+							this._extend(_ns_cls.prototype);
 
 						}
 
@@ -982,7 +834,7 @@
 
 						if (_str_extend) {
 
-							var _proto_class = _j._get_cls(_str_extend)["cls"].prototype;
+							var _proto_class = _b._get_cls(_str_extend)["cls"].prototype;
 
 							this.__count++;
 
@@ -1000,24 +852,39 @@
 
 				},
 
+				addEventListener: function(str_event, func_cb, misc_scope) {
+
+					$(this)[_b.event.on]('cls.' + str_event, {
+						scope: misc_scope
+					}, func_cb);
+
+				},
+
 				destroy: function() {
 
 					if (this.__destroy) {
-						_j.echo("error", "JSB_ERROR_CLASS_DESTROY","Class:"+ this.className +" already destroy.");
+
+						_b._log("error", _b.errors[1],"Class:"+ this.__classname +" already destroy.");
+
 						return true;
+
 					}
 
-					var _ns_cls = _j._get_cls(this.className);
+					var _ns_cls = _b._get_cls(this.__classname);
 
 					for (var i = 0; i < _ns_cls.config.nodes.length; i++) {
-						if (_ns_cls.config.nodes[i] == this) {
+
+						if (_ns_cls.config.nodes[i] === this) {
+
 							_ns_cls.config.nodes.splice(i, 1);
+
 						}
-					};
 
-					_q(this).triggerHandler('cls.destroy', this);
+					}
 
-					_q(_j).triggerHandler('jsb.destroy', this);
+					$(this).triggerHandler('cls.destroy', this);
+
+					$(_b).triggerHandler('jsb.destroy', this);
 
 					this.__destroy = true;
 
@@ -1025,17 +892,23 @@
 
 				},
 
-				addEventListener: function(str_event, func_cb, misc_scope) {
+				dispatchEvent: function(str_event, misc_data) {
 
-					_q(this)[_j.event.on]('cls.' + str_event, {
-						scope: misc_scope
-					}, func_cb);
+					$(this).triggerHandler('cls.' + str_event, [this, misc_data]);
 
 				},
 
-				dispatchEvent: function(str_event, misc_data) {
+				getCss: function(str_name) {
 
-					_q(this).triggerHandler('cls.' + str_event, [this, misc_data]);
+					var _str_name = str_name?str_name:this.__classname;
+
+					return $('head').find('[jsb-css="' + _str_name + '"]');
+
+				},
+
+				getName: function() {
+
+					return this.__classname;
 
 				},
 
@@ -1043,176 +916,195 @@
 
 					var _str_id = str_id ? 'script#' + str_id : '';
 
-					var _str_name = str_name?str_name:this.className;
+					var _str_name = str_name?str_name:this.__classname;
 
-					return _q('head').find(_str_id + '[jsb-tpl="' + _str_name + '"]');
-
-				},
-
-				getCss: function(str_name) {
-
-					var _str_name = str_name?str_name:this.className;
-
-					return _q('head').find('[jsb-css="' + _str_name + '"]');
+					return $('head').find(_str_id + '[jsb-tpl="' + _str_name + '"]');
 
 				},
 
 				removeEventListener: function(str_event) {
 
-					_q(this)[_j.event.off]('cls.' + str_event);
+					$(this)[_b.event.off]('cls.' + str_event);
 
 				}
 
-			}
+			};
 
 		},
 
-		_parser_callback:function(str_name,str_file,done,fail){
+		_log: function(type,message,detail) {
 
-			var _obj_import_status = _j.data.imports[str_file];
+			_b.dispatchEvent("log",{type:type,message:message,detail:detail});
+
+		},
+
+		_parser_callback:function(fileName,funcSuccess,funcError) {
+
+			var _obj_import_status = _b.data.imports[fileName];
 
 			//檢查要被載入的檔案是否已載入
-			if(!_j._get_cls(str_file) && !_obj_import_status){
+			if(!_b._get_cls(fileName) && !_obj_import_status){
 
-				_j.importClass(str_file,function(){
-					_j.classReady(str_file,function(){
-						done.call();
+				_b.importClass(fileName,function(){
+					_b.classReady(fileName,function(){
+						funcSuccess.call();
 					},function(){
-						fail.call();
+						funcError.call();
 					});
 				},function(){
-					fail.call();
+					funcError.call();
 				});
 
 			}else{
 
-				_j.classReady(str_file,function(){
-					done.call();
+				_b.classReady(fileName,function(){
+					funcSuccess.call();
 				},function(){
-					fail.call();
+					funcError.call();
 				});	
 
 			}
 
 		},
 
-		_parser_imports: function(str_name,str_file) {
+		_parser_imports: function(clsName,fileName) {
 
-			_j._parser_callback(str_name,str_file,function(){
-				_j._set_cls_status(str_name,'imports',str_file);
+			_b._parser_callback(fileName,function(){
+
+				_b._cls_status_set(clsName,'imports',fileName);
+
 			},function(){
-				_j._set_cls_status(str_name,'fail', str_file);
+
+				_b._cls_status_set(clsName,'fail', fileName);
+
 			});
 
 		},
 
-		_parser_extend: function(jsbcls,cls,str_name,str_file) {
+		_parser_extend: function(jsborn,cls,clsName,fileName) {
 
-			_j._parser_callback(str_name,str_file,function(){
+			_b._parser_callback(fileName,function(){
 
-				_q.extend(
-					jsbcls.prototype,
-					_j.cls.prototype,
-					_j._get_cls(str_file)["cls"].prototype,
+				$.extend(
+					jsborn.prototype,
+					_b.define.prototype,
+					_b._get_cls(fileName)["cls"].prototype,
 					cls
 				);
 
-				_j._set_cls_status(str_name,'extend',str_file);
+				_b._cls_status_set(clsName,'extend',fileName);
+
 			},function(){
-				_j._set_cls_status(str_name,'fail', str_file);
+
+				_b._cls_status_set(clsName,'fail', fileName);
+
 			});
 
 		},
 
-		_parser_plugin: function(str_name,str_file) {
+		_parser_plugin: function(clsName,fileName) {
 
-			_j._parser_callback(str_name,str_file,function(){
-				_j._set_cls_status(str_name,'plugins',str_file);
+			_b._parser_callback(fileName,function(){
+
+				_b._cls_status_set(clsName,'plugins',fileName);
+
 			},function(){
-				_j._set_cls_status(str_name,'fail', str_file);
+
+				_b._cls_status_set(clsName,'fail', fileName);
+
 			});
 
 		},
 
-		_parser_css: function(str_name,str_file) {
+		_parser_css: function(clsName,fileName) {
 
-			_q.ajax({
+			$.ajax({
 				type: "GET",
 				cache:false,
 				dataType:'text',
-				url: _j._parser_url(str_file)
-			}).done(function(data){
+				url: _b._parser_url(fileName)
+			})
+			.done(function(data){
 
 				var _el_style = document.createElement("style");
 
-				_q(_el_style)
+				$(_el_style)
 					.attr("type", "text/css")
-					.attr('jsb-css', str_name);
-		
+					.attr('jsb-css', clsName);
+				//Fixed IE 8 or below
 				if (_el_style.styleSheet) {
+
 					_el_style.styleSheet.cssText = data;
+
 				} else {
+
 					_el_style.innerHTML = data;
+
 				}
 
-				_q(_el_style).appendTo('head');
+				$(_el_style).appendTo('head');
 
-				_j._set_cls_status(str_name,'css',str_file);
+				_b._cls_status_set(clsName,'css',fileName);
 
-			}).fail(function(){
+			})
+			.fail(function(){
 
-				_j._set_cls_status(str_name,'fail',str_file);
+				_b._cls_status_set(clsName,'fail',fileName);
 
 			});
 			
 		},
 
-		_parser_tpl: function(str_name,str_file) {
+		_parser_tpl: function(clsName,fileName) {
 
-			_q.ajax({
+			$.ajax({
 				type: "GET",
 				cache:false,
 				dataType: "html",
-				url: _j._parser_url(str_file)
-			}).done(function(data){
+				url: _b._parser_url(fileName)
+			})
+			.done(function(data){
 
-				var _ary_el = _q(data);
+				var _ary_el = $(data);
 
-				_ary_el.attr('jsb-tpl', str_name);
+				_ary_el.attr('jsb-tpl', clsName);
 
 				_ary_el.appendTo('head');
 
-				_j._set_cls_status(str_name,'tpl',str_file);
+				_b._cls_status_set(clsName,'tpl',fileName);
 
-			}).fail(function(){
+			})
+			.fail(function(){
 
-				_j._set_cls_status(str_name,'fail',str_file);				
+				_b._cls_status_set(clsName,'fail',fileName);				
 
 			});
 
 		},
 
-		_parser_url: function(str_url, str_ext) {
+		_parser_url: function(url, ext) {
 
-			var _obj_config = _j.config.imports;
+			var _obj_config = _b.config.imports;
 
 			var _str_url = '';
 
 			var _str_path = _obj_config.path;
 
-			if (!_q.isEmptyObject(_obj_config.parser)) {
+			var misc;
+
+			if (!$.isEmptyObject(_obj_config.parser)) {
 
 				var num_str_len = 0;
 
-				for (key in _obj_config.parser) {
+				for (var key in _obj_config.parser) {
 
 					var reg = new RegExp('^' + key, 'g');
 
-					if (str_url.match(reg)) {
+					if (url.match(reg)) {
 
 						if (key.length > num_str_len) {
 
-							var misc = _obj_config.parser[key];
+							misc = _obj_config.parser[key];
 
 							_str_path = misc.path ? misc.path : misc;
 
@@ -1232,11 +1124,11 @@
 
 			// }else{
 
-				_str_url = _str_path + str_url + (str_ext ? str_ext : '');
+				_str_url = _str_path + url + (ext ? ext : '');
 
 			// }
 			// console.log(_str_url);
-			if (misc && _q.isFunction(misc.parser)) {
+			if (misc && $.isFunction(misc.parser)) {
 
 				_str_url = misc.parser.call(misc,_str_url);
 
@@ -1245,92 +1137,87 @@
 			return _str_url;
 
 		},
-		//*
-		_set_cls_status:function(str_name,str_type,str_value){
 
-			if(str_type!="fail"){
+		_ready:function(funcSuccess,funcError,event) {
 
-				_j._update_cls_status(str_name,str_type,str_value);
+			if(event==="ready"&&_b.status==="complete"){
 
-			}else{
+				funcSuccess.call();
 
-				_j.dispatchEvent(str_value+"::ERROR");
+				return true;
 
 			}
-			// console.log("str_type",str_type,str_name,str_value);
-			this._file_require_decrease(str_name);
-			// _j._get_cls(str_name)["fileRequire"]--;
-			_j._check_cls_status(str_name);
 
-		},
+			var _func = function(){
 
-		_update_cls_status:function(str_name,str_type,str_value){
+				_b.removeEventListener(event,_func);
 
-			var _ary = _j._get_cls(str_name)["status"][str_type];
+				_b.removeEventListener(event+"::Error",_err_func);
 
-			for (var i = 0; i < _ary.length; i++) {
-
-				if(_ary[i]==str_value){
-					_ary.splice(i,1);
-					break;
+				if($.isFunction(funcSuccess))
+				{
+					funcSuccess.call();
 				}
-
+				
 			};
 
-			if(_ary.length>0){
-				_j._get_cls(str_name)["status"][str_type] = _ary;
-			}else{
-				_j._get_cls(str_name)["status"][str_type] = true;
-			}
+			var _err_func = function(){
+
+				_b.removeEventListener(event,_func);
+
+				_b.removeEventListener(event+"::Error",_err_func);
+				
+				if($.isFunction(funcError))
+				{
+					funcError.call();
+				}
+				
+			};
+
+			_b.addEventListener(event,_func);
+			// console.log(event+"::Error");
+			_b.addEventListener(event+"::Error",_err_func);
 
 		},
 
-		_xhr:function(str_impcls){
+		_xhr:function(clsName) {
 
-			_str_url = _j._parser_url(str_impcls, '.js');
+			_str_url = _b._parser_url(clsName, '.js');
 
-			_j.data.imports[str_impcls] = {
+			_b.data.imports[clsName] = {
 				status: 'progress'
 			};
 
-			_j.data.loads.push(str_impcls);
+			_b.data.loads.push(clsName);
 
-			return _q.ajax({
+			return $.ajax({
 
 				url: _str_url,
 
 				dataType: "script",
 
-				cache: _j.config.imports.cache
+				cache: _b.config.imports.cache
 
 			}).done(function(){
 
-				_j.data.imports[str_impcls]["status"] = "success";
+				_b.data.imports[clsName]["status"] = "success";
 
 			}).fail(function(jqXHR, textStatus, errorThrown){
 
-				// for (var i = 0; i < _j.data.loads.length; i++) {
-				// 	if(_j.data.loads[i]==str_impcls){
-				// 		_j.data.loads.splice(i,1);
-				// 	}
-				// };
+				_b.data.imports[clsName]["status"] = "fail";
 
-				_j.data.imports[str_impcls]["status"] = "fail";
-
-				_j.echo("error", "JSB_ERROR_CLASS_IMPORT","Require:" + _str_url + " Message:" + errorThrown);
+				_b._log("error", _b.errors[2],"Require:" + _str_url + " Message:" + errorThrown);
 
 			});
 
 		}
 
-	}
+	};
 
-	window.JSB = JSB;
+	_b._init_cls();
 
-	if(!window.jsb) { window.jsb = JSB };
-
-	if(!window._j) { window._j = JSB };
-
-	JSB._init_cls();
+	window._b     = _b;
+	
+	window.JSBorn = _b;
 
 })(window);

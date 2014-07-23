@@ -1,4 +1,4 @@
-JSB.cls("qunit/tests/plugin/ClassInfiniteLevel2", {
+_b.define("qunit/tests/plugin/ClassInfiniteLevel2", {
 	
 	plugins:[
 		"qunit/tests/plugin/ClassParent",

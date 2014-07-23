@@ -1,4 +1,4 @@
-JSB.cls("qunit/tests/extend/ClassInfiniteLevel1", {
+_b.define("qunit/tests/extend/ClassInfiniteLevel1", {
 	
 	extend:"qunit/tests/extend/ClassInfiniteLevel2",
 	

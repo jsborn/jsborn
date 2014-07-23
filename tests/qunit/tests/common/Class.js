@@ -1,4 +1,4 @@
-JSB.cls("qunit/tests/common/Class", {
+_b.define("qunit/tests/common/Class", {
 	
 	initialize: function(options) {
 
