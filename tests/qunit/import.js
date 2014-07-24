@@ -2,6 +2,7 @@ _b.addEventListener("log",function(e,message)
 {
 	console.log(message);
 });
+/*
 _b.setConfig({
 	imports: {
 		parser: {
@@ -9,6 +10,7 @@ _b.setConfig({
 		}
 	}
 });
+*/
 QUnit.asyncTest( "Import Class Test", function( assert ) {
 
 	expect(1);
