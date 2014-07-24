@@ -2,7 +2,13 @@ _b.addEventListener("log",function(e,message)
 {
 	console.log(message);
 });
-
+_b.setConfig({
+	imports: {
+		parser: {
+			"qunit/tests/import":'file:///Users/tureki/Documents/github/jsborn/tests/'
+		}
+	}
+});
 QUnit.asyncTest( "Import Class Test", function( assert ) {
 
 	expect(1);

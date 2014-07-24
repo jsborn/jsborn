@@ -363,14 +363,12 @@ QUnit.asyncTest( "Class Import Class Routing Test", function( assert ) {
 	});
 
 	_b.importClass(["qunit/tests/common/ClassRouting","qunit/tests/common/router/Class"],function(){
-
 		_b.classReady("qunit/tests/common/ClassRouting",function(){
 			assert.ok( true , "ClassRouting!" );
 			QUnit.start();
 		},function(){
 			QUnit.start();
 		});
-		
 	},function(){
 		QUnit.start();
 	});
