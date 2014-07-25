@@ -1,8 +1,6 @@
-# [JSBorn v0.5a](http://jsborn.org)
-
-Alpha版本，還有很多問題和需要加強的地方，若有問題或想法可 聯絡我。
-
-所有關於JSBorn的相關資料都在 [http://jsborn.org](http://jsborn.org)!
+##JSBorn
+[![Build Status](https://travis-ci.org/tureki/jsborn.svg?branch=master)](https://travis-ci.org/tureki/jsborn)
+[![Coverage Status](https://coveralls.io/repos/tureki/jsborn/badge.png?branch=master)](https://coveralls.io/r/tureki/jsborn?branch=master)
 
 
 
@@ -11,10 +9,10 @@ Alpha版本，還有很多問題和需要加強的地方，若有問題或想法
 **tureki**
 
 + [http://github.com/tureki](http://github.com/tureki)
++ [https://twitter.com/tureki](https://twitter.com/tureki)
 
 
 
-## Copyright and license
+## Copyright and License
 
-Copyright 2013 JSBorn, Org under [the Apache 2.0 license](LICENSE).
-
+Copyright 2013 tureki, under [the Apache 2.0 license](LICENSE).
