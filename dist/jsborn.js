@@ -60,7 +60,8 @@
 		events: [
 			"log",
 			"create",
-			"destroy"
+			"destroy",
+			"classReady"
 		],
 
 		/**
@@ -130,7 +131,9 @@
 		},
 
 		/**
-		 * Is JSBorn Class require file and status ready.
+		 * IS JSBorn Class Object Ready. 
+		 * Then done function will be call when all depend files load.
+		 * The fail function will be call when depend files have an error.
 		 * 
 		 * @example
 		 * _b.classReady("YourDefineClass",function(){
@@ -190,7 +193,7 @@
 			}
 
 			if(done){
-
+				
 				if(_bol_check){
 
 					done.call();
@@ -304,8 +307,6 @@
 		 */
 		define:function(clsName, cls) {
 
-			var i;
-
 			if (_b._get_cls(clsName)) {
 
 				_b._log("warning", _b.errors[0], "[Class]:'" + clsName + "' define again.");
@@ -343,6 +344,15 @@
 				return true;
 
 			};
+
+			if(cls.tpl){
+				cls.tpl = $.isArray(cls.tpl)?cls.tpl:[cls.tpl];	
+			}
+			
+			if(cls.css){
+				cls.css = $.isArray(cls.css)?cls.css:[cls.css];	
+			}
+
 			//Class config
 			_b.data.clss[clsName] = {
 				cls: _jsb_cls,
@@ -375,6 +385,8 @@
 
 			}
 
+			var i;
+			//check class imports file
 			if (cls.imports) {
 
 				for (i = 0; i < cls.imports.length; i++) {
@@ -384,7 +396,7 @@
 				}
 
 			}
-
+			//check class extend file
 			if (cls.extend) {
 
 				if(!_b._cls_infinite("extend",cls.extend,clsName)){
@@ -400,7 +412,7 @@
 				}
 
 			}
-
+			//check class plugin file
 			if (cls.plugins) {
 
 				for (i = 0; i < cls.plugins.length; i++) {
@@ -422,7 +434,7 @@
 				}
 
 			}
-
+			//check class template file
 			if (cls.tpl) {
 
 				for (i = 0; i < cls.tpl.length; i++) {
@@ -432,7 +444,7 @@
 				}
 
 			}
-
+			//check class css file
 			if (cls.css) {
 
 				for (i = 0; i < cls.css.length; i++) {
@@ -443,11 +455,13 @@
 
 			}
 
-			setTimeout(function() {
+			if(!_b.getImportData()[clsName]){
+				//class status check 
+				setTimeout(function() {
+					_b._cls_status_dispatch(clsName);
+				}, 1);
 
-				_b._cls_status_dispatch(clsName);
-
-			}, 1);
+			}
 			
 			return _b._get_cls(clsName);
 
@@ -605,10 +619,10 @@
 		},
 
 		/**
-		 * Register JSBorn Class Object to global namespace.
+		 * Register JSBorn Class Object to a global variable.
 		 *
 		 * @example
-		 * _b.registerGlobal("my.app",_b.define("CLASS",function(){
+		 * _b.registerGlobal("my.app",_b.define("YourClass",function(){
 		 * 	initialize: function(options) {
 		 * 	
 		 * 	}
@@ -870,9 +884,17 @@
 
 			if(_b.classReady(clsName)){
 
-				_b._get_cls(clsName)["ready"] = true;
+				var _bol_ready = _b._get_cls(clsName)["ready"];
 
-				_b.dispatchEvent(clsName,clsName);
+				if(!_bol_ready){
+
+					_b._get_cls(clsName)["ready"] = true;
+
+					_b.dispatchEvent(clsName,clsName);
+
+					_b.dispatchEvent(_b.events[3],clsName);
+					
+				}
 
 			}else{
 
@@ -1313,7 +1335,11 @@
 
 		_log: function(type,message,detail) {
 
-			_b.dispatchEvent(_b.events[0],{type:type,message:message,detail:detail});
+			_b.dispatchEvent(_b.events[0],{
+				type:type,
+				message:message,
+				detail:detail}
+			);
 
 		},
 

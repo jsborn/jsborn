@@ -3,6 +3,11 @@ _b.addEventListener("log",function(e,message)
 	console.log(message);
 });
 
+_b.addEventListener("classReady",function(e,clsName)
+{
+	console.log(clsName);
+});
+
 QUnit.test( "Define class and init param", function( assert ) {
 
 	_b.define("tests/common/Class", {

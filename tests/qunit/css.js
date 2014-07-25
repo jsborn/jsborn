@@ -2,14 +2,17 @@ _b.addEventListener("log",function(e,message)
 {
 	console.log(message);
 });
-
+_b.addEventListener("classReady",function(e,clsName)
+{
+	console.log(clsName);
+});
 QUnit.asyncTest( "Class CSS test", function( assert ) {
 
 	expect(2);
 
 	_b.define("tests/css/Class", {
 		
-		css:["qunit/tests/css/Class.css"],
+		css:"qunit/tests/css/Class.css",
 
 		initialize: function(options) {
 

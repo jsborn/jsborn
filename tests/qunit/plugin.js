@@ -2,7 +2,10 @@ _b.addEventListener("log",function(e,message)
 {
 	console.log("log",message);
 });
-
+_b.addEventListener("classReady",function(e,clsName)
+{
+	console.log(clsName);
+});
 QUnit.asyncTest( "Plugins Class Test", function( assert ) {
 
 	expect(2);
