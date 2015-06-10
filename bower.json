@@ -35,5 +35,11 @@
 		"jquery.1.8": "http://code.jquery.com/jquery-1.8.0.min.js",
 		"jquery.1.9": "http://code.jquery.com/jquery-1.9.0.min.js",
 		"qunit": ">= 1.14.0"
-	}
+	},
+	"ignore": [
+		"**/.*",
+		"node_modules",
+		"bower_components",
+		"app/bower_components"
+	]
 }
